@@ -1,5 +1,5 @@
 function applyEven(functionBlock) {
-  functionBlock.setColour(30); 
+  functionBlock.setColour(30);
   functionBlock.getChildren().forEach((it) => it.setColour(30))
 }
 
@@ -16,7 +16,7 @@ function getType(connection) {
   return connection.getCheck()[0]
 }
 
-function bump(block) {  
+function bump(block) {
   block.outputConnection.disconnect()
   block.bumpNeighbours()
 }
@@ -29,7 +29,7 @@ function checkConnections(functionBlock) {
 
 function onChangeFunction(event) {
   if (!this.getParent()) {
-    this.setInputsInline(true)
+    this.setCollapsed(false)
   }
 
   if (!this.getChildren().length) {
@@ -53,7 +53,7 @@ function matchType(block1, block2) {
 function checkCompositionParam(param) {
   if (param) {
     checkFunction(param)
-    param.setInputsInline(false)    
+    param.setCollapsed(true)
   }
 }
 
@@ -87,10 +87,10 @@ function onChangeComposition(event) {
 }
 
 Blockly.Blocks['even'] = {
-  init: function() {
+  init: function () {
     this.appendValueInput("NAME")
-        .setCheck("Number")
-        .appendField("even");
+      .setCheck("Number")
+      .appendField("even");
     this.setInputsInline(true);
     this.setOutput(true, "Boolean");
     this.setColour(230);
@@ -100,10 +100,10 @@ Blockly.Blocks['even'] = {
   }
 };
 Blockly.Blocks['not'] = {
-  init: function() {
+  init: function () {
     this.appendValueInput("NAME")
-        .setCheck("Boolean")
-        .appendField("not");
+      .setCheck("Boolean")
+      .appendField("not");
     this.setInputsInline(true);
     this.setOutput(true, "Boolean");
     this.setColour(230);
@@ -114,31 +114,31 @@ Blockly.Blocks['not'] = {
 };
 
 Blockly.Blocks['composition'] = {
-  init: function() {
+  init: function () {
     this.appendValueInput("F2")
-        .setCheck(null);
+      .setCheck(null);
     this.appendValueInput("F1")
-        .setCheck(null)
-        .appendField(".");
+      .setCheck(null)
+      .appendField(".");
     this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("$");
+      .setCheck(null)
+      .appendField("$");
     this.setInputsInline(true);
     this.setOutput(true, null);
     this.setColour('gray')
- this.setTooltip("");
- this.setHelpUrl("");
+    this.setTooltip("");
+    this.setHelpUrl("");
     this.setOnChange(onChangeComposition.bind(this))
   }
 };
 
 
-Blockly.Blocks["math_number"].onchange = function(event) { 
+Blockly.Blocks["math_number"].onchange = function (event) {
   if (event.blockId == this.id) {
     if (!this.getParent()) {
       this.setColour(230)
     } else {
-       this.setColour(30)
+      this.setColour(30)
     }
 
   }
