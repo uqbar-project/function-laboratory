@@ -8,7 +8,7 @@ function isFunction(type) {
 }
 
 function functionType(functionBlock) {
-  const prefix = (!functionBlock.inputList || functionBlock.getChildren().length) ? "" : getType(functionBlock.inputList[0].connection) + "->"
+  const prefix = (!functionBlock.inputList || functionBlock.inputList[0].type !== 1 || functionBlock.getChildren().length) ? "" : getType(functionBlock.inputList[0].connection) + "->"
   return prefix + getType(functionBlock.outputConnection)
 }
 
