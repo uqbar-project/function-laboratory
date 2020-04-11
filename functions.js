@@ -46,8 +46,12 @@ function checkFunction(functionBlock) {
   }
 }
 
-function matchType(block1, block2) {
+function matchCompositionType(block1, block2) {
   return block1.inputList[0].connection.checkType(block2.outputConnection)
+}
+
+function matchApplyType(block1, block2) {
+  return block1.inputList[0].connection.checkType({ check_: [functionType(block2)] })
 }
 
 function checkCompositionParam(param) {
@@ -58,14 +62,14 @@ function checkCompositionParam(param) {
 }
 
 function checkComposition(block1, block2) {
-  if (!matchType(block1, block2)) {
+  if (!matchCompositionType(block1, block2)) {
     bump(block1)
     bump(block2)
   }
 }
 
 function checkApply(block1, block2) {
-  if (!matchType(block1, block2)) {
+  if (!matchApplyType(block1, block2)) {
     bump(block2)
   }
 }
