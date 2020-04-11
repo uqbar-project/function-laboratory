@@ -122,7 +122,7 @@ Blockly.Blocks['composition'] = {
         .appendField(".");
     this.appendValueInput("VALUE")
         .setCheck(null)
-        .appendField("  ");
+        .appendField("$");
     this.setInputsInline(true);
     this.setOutput(true, null);
     this.setColour('gray')
