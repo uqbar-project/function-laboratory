@@ -2,7 +2,7 @@
 
 <script src="blockly/blockly_compressed.js"></script>
 <script src="blockly/blocks_compressed.js"></script>
-<script src="msg/js/es.js"></script>
+<script src="blockly/msg/js/es.js"></script>
 <div id="blocklyDiv" style="height: 480px; width: 600px;"></div>
 
 <xml id="toolbox" style="display: none">
