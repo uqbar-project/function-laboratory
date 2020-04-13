@@ -1,8 +1,6 @@
 'use strict'
 
-const assert = chai.assert
-
-describe('Applying parameters', () => {
+describe('Connections', () => {
 
   describe('One parameter functions', () => {
 
@@ -152,20 +150,4 @@ const assertConnection = (parentBlock, block) => {
 
 const assertRejectedConnection = (parentBlock, block) => {
   assert.notInclude(parentBlock.getChildren(), block)
-}
-
-const connect = (block, parameterBlock, inputIndex = 0) => {
-  tryConnect(block, parameterBlock, inputIndex)
-  forceBlocklyEvents()
-}
-
-const tryConnect = (block, parameterBlock, inputIndex = 0) => {
-  try {
-    block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
-  } catch { }
-}
-
-// This forces synchronous onchange() calls.
-function forceBlocklyEvents() {
-  Blockly.Events.fireNow_()
 }

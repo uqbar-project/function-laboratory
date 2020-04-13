@@ -1,3 +1,7 @@
+'use strict'
+
+const assert = chai.assert
+
 const blocklyWorkspaceMock = function () {
   let workspace = new Blockly.WorkspaceSvg({})
   workspace.createDom()
@@ -16,4 +20,22 @@ const onWorkspace = (name, test) => {
       workspace.dispose()
     }
   })
+}
+
+
+
+const connect = (block, parameterBlock, inputIndex = 0) => {
+  tryConnect(block, parameterBlock, inputIndex)
+  forceBlocklyEvents()
+}
+
+const tryConnect = (block, parameterBlock, inputIndex = 0) => {
+  try {
+    block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
+  } catch { }
+}
+
+// This forces synchronous onchange() calls.
+function forceBlocklyEvents() {
+  Blockly.Events.fireNow_()
 }
