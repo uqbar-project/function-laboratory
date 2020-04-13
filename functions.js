@@ -7,13 +7,21 @@ function isFunction(type) {
   return type.includes("->")
 }
 
+const asFunctionType = (...types) => types.join('->')
+
+const isBlockInput = (input) => input.type === 1
+
+const isEmptyInput = (input) => !input.connection.targetConnection
+
 function functionType(functionBlock) {
-  const prefix = (!functionBlock.inputList || functionBlock.inputList[0].type !== 1 || functionBlock.getChildren().length) ? "" : getType(functionBlock.inputList[0].connection) + "->"
-  return prefix + getType(functionBlock.outputConnection)
+  const inputTypes = functionBlock.inputList
+    .filter(input => isBlockInput(input) && isEmptyInput(input))
+    .map(input => getType(input.connection))
+  return asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
 }
 
 function getType(connection) {
-  return connection.getCheck()[0]
+  return connection.getCheck() && connection.getCheck()[0] || 'Any'
 }
 
 function bump(block) {
