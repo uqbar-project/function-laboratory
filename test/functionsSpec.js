@@ -1,54 +1,55 @@
-'use strict';
+'use strict'
 
-const assert = this.chai.assert;
+const assert = chai.assert
 
-const passParameter = (block, parameterBlock) => {
-  try {
-    block.inputList[0].connection.connect(parameterBlock.outputConnection);
-  } catch { }
-};
-
-const withWorkspace = (test) => {
-  var workspace = new Blockly.Workspace();
-  try {
-    test(workspace);
-  } finally {
-    workspace.dispose();
-  }
-}
-
-// This forces synchronous onchange() calls.
-function forceBlocklyEvents() {
-  Blockly.Events.fireNow_();
+const onWorkspace = (name, test) => {
+  var workspace = new Blockly.Workspace()
+  it(name, () => {
+    try {
+      test(workspace)
+    } finally {
+      workspace.dispose()
+    }
+  })
 }
 
 describe('Applying parameters', () => {
   describe('One parameter functions', () => {
     describe('even', () => {
-      it('should be possible to apply numbers to it', () => {
-        withWorkspace(workspace => {
-          const even = workspace.newBlock('even');
-          const zero = workspace.newBlock('math_number');
-  
-          passParameter(even, zero)
 
-          forceBlocklyEvents();
-  
-          assert.include(even.getChildren(), zero);
-        })
-      }),
-      it('should not be possible to apply strings to it', () => {
-        withWorkspace(workspace => {
-          const even = workspace.newBlock('even');
-          const emptyString = workspace.newBlock('text');
+      onWorkspace('should be possible to apply numbers to it', workspace => {
+        const even = workspace.newBlock('even')
+        const zero = workspace.newBlock('math_number')
 
-          passParameter(even, emptyString)
+        connect(even, zero)
 
-          forceBlocklyEvents();
+        assert.include(even.getChildren(), zero)
+      })
 
-          assert.notInclude(even.getChildren(), emptyString);
-        })
-      });
+      onWorkspace('should not be possible to apply strings to it', workspace => {
+        const even = workspace.newBlock('even')
+        const emptyString = workspace.newBlock('text')
+
+        connect(even, emptyString)
+
+        assert.notInclude(even.getChildren(), emptyString)
+      })
     })
-  });
-});
+  })
+})
+
+const connect = (block, parameterBlock) => {
+  tryConnect(block, parameterBlock)
+  forceBlocklyEvents()
+}
+
+const tryConnect = (block, parameterBlock, inputIndex = 0) => {
+  try {
+    block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
+  } catch { }
+}
+
+// This forces synchronous onchange() calls.
+function forceBlocklyEvents() {
+  Blockly.Events.fireNow_()
+}
