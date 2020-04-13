@@ -45,6 +45,105 @@ describe('Applying parameters', () => {
     })
 
   })
+
+
+  describe('Composition', () => {
+
+    onWorkspace('should connect functions in first input', workspace => {
+      const composition = workspace.newBlock('composition')
+      const even = workspace.newBlock('even')
+
+      connect(composition, even, 0)
+
+      assertConnection(composition, even)
+    })
+
+    onWorkspace('should connect functions in second input', workspace => {
+      const composition = workspace.newBlock('composition')
+      const even = workspace.newBlock('even')
+
+      connect(composition, even, 1)
+
+      assertConnection(composition, even)
+    })
+
+    onWorkspace('should connect any block in third input', workspace => {
+      const composition = workspace.newBlock('composition')
+      const number = workspace.newBlock('math_number')
+
+      connect(composition, number, 2)
+
+      assertConnection(composition, number)
+    })
+
+    onWorkspace('should not connect non functions in first input', workspace => {
+      const composition = workspace.newBlock('composition')
+      const number = workspace.newBlock('math_number')
+
+      connect(composition, number, 0)
+
+      assertRejectedConnection(composition, number)
+    })
+
+    onWorkspace('should not connect non functions in second input', workspace => {
+      const composition = workspace.newBlock('composition')
+      const number = workspace.newBlock('math_number')
+
+      connect(composition, number, 1)
+
+      assertRejectedConnection(composition, number)
+    })
+    
+    onWorkspace('should connect compositionable functions', workspace => {
+      const composition = workspace.newBlock('composition')
+      const not = workspace.newBlock('not')
+      const even = workspace.newBlock('even')
+
+      connect(composition, not, 0)
+      connect(composition, even, 1)
+
+      assertConnection(composition, even)
+      assertConnection(composition, not)
+    })
+
+    onWorkspace('should not connect non compositionable functions', workspace => {
+      const composition = workspace.newBlock('composition')
+      const even = workspace.newBlock('even')
+      const not = workspace.newBlock('not')
+
+      connect(composition, even, 0)
+      connect(composition, not, 1)
+
+      assertRejectedConnection(composition, even)
+      assertRejectedConnection(composition, not)
+    })
+
+    onWorkspace('should connect expected value', workspace => {
+      const composition = workspace.newBlock('composition')
+      const not = workspace.newBlock('not')
+      const even = workspace.newBlock('even')
+      const number = workspace.newBlock('math_number')
+
+      connect(composition, not, 0)
+      connect(composition, even, 1)
+      connect(composition, number, 2)
+
+      assertConnection(composition, number)
+    })
+
+    onWorkspace('should not connect unexpected value', workspace => {
+      const composition = workspace.newBlock('composition')
+      const not = workspace.newBlock('not')
+      const even = workspace.newBlock('even')
+      const text = workspace.newBlock('text')
+
+      connect(composition, not, 0)
+      connect(composition, even, 1)
+      connect(composition, text, 2)
+
+      assertRejectedConnection(composition, text)
+    })
+  })
 })
 
 const assertConnection = (parentBlock, block) => {
@@ -55,8 +154,8 @@ const assertRejectedConnection = (parentBlock, block) => {
   assert.notInclude(parentBlock.getChildren(), block)
 }
 
-const connect = (block, parameterBlock) => {
-  tryConnect(block, parameterBlock)
+const connect = (block, parameterBlock, inputIndex = 0) => {
+  tryConnect(block, parameterBlock, inputIndex)
   forceBlocklyEvents()
 }
 
