@@ -1,0 +1,24 @@
+{
+  "name": "function-laboratory",
+  "version": "1.0.0",
+  "description": "<script src=\"blockly/blockly_compressed.js\"></script> <script src=\"blockly/blocks_compressed.js\"></script> <script src=\"blockly/msg/js/es.js\"></script> <script src=\"functions.js\"></script>",
+  "main": "functions.js",
+  "scripts": {
+    "test": "mocha-headless-chrome -f test/test.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PalumboN/function-laboratory.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PalumboN/function-laboratory/issues"
+  },
+  "homepage": "https://github.com/PalumboN/function-laboratory#readme",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^7.1.1",
+    "mocha-headless-chrome": "^2.0.3"
+  }
+}
