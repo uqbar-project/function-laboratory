@@ -32,6 +32,10 @@ function getType(connection) {
   return connection.getCheck() && connection.getCheck()[0] || 'Any'
 }
 
+function checkType(connection, block, getType = functionType) {
+  return connection.checkType({ check_: [getType(block)] })
+}
+
 function bump(block) {
   block.outputConnection.disconnect()
   block.bumpNeighbours()
@@ -43,16 +47,16 @@ function firstEmptyFree(block) {
 
 function matchCompositionType(block1, block2) {
   const input = firstEmptyFree(block1)
-  return input && input.connection.checkType({ check_: [outputFunctionType(block2)] })
+  return input && checkType(input.connection, block2, outputFunctionType)
 }
 
 function matchApplyType(block1, block2) {
   const input = firstEmptyFree(block1)
-  return input && input.connection.checkType({ check_: [functionType(block2)] })
+  return input && checkType(input.connection, block2)
 }
 
-function checkConnections(functionBlock) {
-  if (functionBlock.outputConnection.targetConnection && !functionBlock.outputConnection.targetConnection.checkType({ check_: [functionType(functionBlock)] })) {
+function checkParentConnection(functionBlock) {
+  if (functionBlock.outputConnection.targetConnection && !checkType(functionBlock.outputConnection.targetConnection, functionBlock)) {
     bump(functionBlock)
   }
 }
@@ -94,7 +98,7 @@ function onChangeFunction(event) {
   } else {
     this.setColour(30)
   }
-  checkConnections(this)
+  checkParentConnection(this)
 }
 
 function onChangeComposition(event) {
