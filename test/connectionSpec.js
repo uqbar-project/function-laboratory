@@ -2,7 +2,7 @@
 
 describe('Connections', () => {
 
-  describe('One parameter functions', () => {
+  describe('Functions', () => {
 
     onWorkspace('should connect expected parameters value', workspace => {
       const even = workspace.newBlock('even')

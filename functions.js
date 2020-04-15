@@ -3,19 +3,21 @@ function applyEven(functionBlock) {
   functionBlock.getChildren().forEach((it) => it.setColour(30))
 }
 
-const isFunction = (type) => type.includes("->")
+const isFunction = type => type.includes("->")
 
 const asFunctionType = (...types) => types.join('->')
 
-const functionTypeToList = (functionType) => functionType.split('->')
+const functionTypeToList = functionType => functionType.split('->')
 
-const isBlockInput = (input) => input.type === 1
+const isBlockInput = input => input.type === 1
 
-const isEmptyInput = (input) => !input.connection.targetConnection
+const isEmptyInput = input => !input.connection.targetConnection
+
+const isEmptyBlockInput = input => isBlockInput(input) && isEmptyInput(input)
 
 function functionType(functionBlock) {
   const inputTypes = functionBlock.inputList
-    .filter(input => isBlockInput(input) && isEmptyInput(input))
+    .filter(isEmptyBlockInput)
     .map(input => getType(input.connection))
   return asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
 }
@@ -35,9 +37,48 @@ function bump(block) {
   block.bumpNeighbours()
 }
 
+function firstEmptyFree(block) {
+  return block.inputList.filter(isEmptyBlockInput)[0]
+}
+
+function matchCompositionType(block1, block2) {
+  const input = firstEmptyFree(block1)
+  return input && input.connection.checkType({ check_: [outputFunctionType(block2)] })
+}
+
+function matchApplyType(block1, block2) {
+  const input = firstEmptyFree(block1)
+  return input && input.connection.checkType({ check_: [functionType(block2)] })
+}
+
 function checkConnections(functionBlock) {
   if (functionBlock.outputConnection.targetConnection && !functionBlock.outputConnection.targetConnection.checkType({ check_: [functionType(functionBlock)] })) {
     bump(functionBlock)
+  }
+}
+
+function checkFunction(functionBlock) {
+  if (!isFunction(functionType(functionBlock))) {
+    bump(functionBlock)
+  }
+}
+
+function checkComposition(block1, block2) {
+  if (!matchCompositionType(block1, block2)) {
+    bump(block1)
+    bump(block2)
+  }
+}
+
+function checkCompositionParam(param) {
+  if (param) {
+    checkFunction(param)
+  }
+}
+
+function checkApply(block1, block2) {
+  if (!matchApplyType(block1, block2)) {
+    bump(block2)
   }
 }
 
@@ -54,39 +95,6 @@ function onChangeFunction(event) {
     this.setColour(30)
   }
   checkConnections(this)
-}
-
-function checkFunction(functionBlock) {
-  if (!isFunction(functionType(functionBlock))) {
-    bump(functionBlock)
-  }
-}
-
-function matchCompositionType(block1, block2) {
-  return block1.inputList[0].connection.checkType({ check_: [outputFunctionType(block2)] })
-}
-
-function matchApplyType(block1, block2) {
-  return block1.inputList[0].connection.checkType({ check_: [functionType(block2)] })
-}
-
-function checkCompositionParam(param) {
-  if (param) {
-    checkFunction(param)
-  }
-}
-
-function checkComposition(block1, block2) {
-  if (!matchCompositionType(block1, block2)) {
-    bump(block1)
-    bump(block2)
-  }
-}
-
-function checkApply(block1, block2) {
-  if (!matchApplyType(block1, block2)) {
-    bump(block2)
-  }
 }
 
 function onChangeComposition(event) {
@@ -133,6 +141,20 @@ Blockly.Blocks['not'] = {
   }
 }
 
+Blockly.Blocks['length'] = {
+  init: function () {
+    this.appendValueInput("NAME")
+      .setCheck("String")
+      .appendField("length");
+    this.setInputsInline(true);
+    this.setOutput(true, "Number");
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+    this.setOnChange(onChangeFunction.bind(this))
+  }
+}
+
 Blockly.Blocks['charAt'] = {
   init: function () {
     this.appendValueInput("NAME")
@@ -143,7 +165,7 @@ Blockly.Blocks['charAt'] = {
       .setCheck("String")
 
     this.setInputsInline(true);
-    this.setOutput(true, "Boolean");
+    this.setOutput(true, "String");
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
