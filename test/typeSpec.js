@@ -24,6 +24,29 @@ describe('Types', () => {
 
   })
 
+  describe('many param function', () => {
+
+    onWorkspace('type', workspace => {
+      const charAt = workspace.newBlock('charAt')
+      assertType(charAt, 'Number', 'String', 'String')
+    })
+
+    onWorkspace('first param applied type', workspace => {
+      const charAt = workspace.newBlock('charAt')
+      const number = workspace.newBlock('math_number')
+      connect(charAt, number, 0)
+      assertType(charAt, 'String', 'String')
+    })
+
+    onWorkspace('second param applied type', workspace => {
+      const charAt = workspace.newBlock('charAt')
+      const text = workspace.newBlock('text')
+      connect(charAt, text, 1)
+      assertType(charAt, 'Number', 'String')
+    })
+
+  })
+
   describe('composition', () => {
 
     onWorkspace('type', workspace => {

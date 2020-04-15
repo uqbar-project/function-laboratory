@@ -116,6 +116,18 @@ describe('Connections', () => {
       assertRejectedConnection(composition, not)
     })
 
+    onWorkspace('should not connect non compositionable two params functions', workspace => {
+      const composition = workspace.newBlock('composition')
+      const not = workspace.newBlock('not')
+      const compare = workspace.newBlock('compare')
+
+      connect(composition, not, 0)
+      connect(composition, compare, 1)
+
+      assertRejectedConnection(composition, not)
+      assertRejectedConnection(composition, compare)
+    })
+
     onWorkspace('should connect expected value', workspace => {
       const composition = workspace.newBlock('composition')
       const not = workspace.newBlock('not')
@@ -140,6 +152,90 @@ describe('Connections', () => {
       connect(composition, text, 2)
 
       assertRejectedConnection(composition, text)
+    })
+
+    describe('with partial application functions', () => {
+
+      onWorkspace('should connect compositionable functions', workspace => {
+        const composition = workspace.newBlock('composition')
+        const charAt = workspace.newBlock('charAt')
+        const length = workspace.newBlock('length')
+  
+        connect(composition, charAt, 0)
+        connect(composition, length, 1)
+  
+        assertConnection(composition, charAt)
+        assertConnection(composition, length)
+      })
+
+      onWorkspace('should connect compositionable two params functions with first param applied', workspace => {
+        const composition = workspace.newBlock('composition')
+        const not = workspace.newBlock('not')
+        const compare = workspace.newBlock('compare')
+        const number = workspace.newBlock('math_number')
+  
+        connect(compare, number, 0)
+        connect(composition, not, 0)
+        connect(composition, compare, 1)
+  
+        assertConnection(composition, not)
+        assertConnection(composition, compare)
+      })
+
+      onWorkspace('should connect compositionable two params functions with second param applied', workspace => {
+        const composition = workspace.newBlock('composition')
+        const not = workspace.newBlock('not')
+        const compare = workspace.newBlock('compare')
+        const number = workspace.newBlock('math_number')
+  
+        connect(compare, number, 1)
+        connect(composition, not, 0)
+        connect(composition, compare, 1)
+  
+        assertConnection(composition, not)
+        assertConnection(composition, compare)
+      })
+  
+      onWorkspace('should not connect non compositionable functions', workspace => {
+        const composition = workspace.newBlock('composition')
+        const charAt = workspace.newBlock('charAt')
+        const length = workspace.newBlock('length')
+        const number = workspace.newBlock('math_number')
+  
+        connect(charAt, number, 0)
+        connect(composition, charAt, 0)
+        connect(composition, length, 1)
+  
+        assertRejectedConnection(composition, charAt)
+        assertRejectedConnection(composition, length)
+      })
+
+      onWorkspace('should connect expected value', workspace => {
+        const composition = workspace.newBlock('composition')
+        const charAt = workspace.newBlock('charAt')
+        const number = workspace.newBlock('math_number')
+        const text = workspace.newBlock('text')
+  
+        connect(charAt, number, 0)
+        connect(composition, charAt, 1)
+        connect(composition, text, 2)
+  
+        assertConnection(composition, text)
+      })
+  
+      onWorkspace('should not connect unexpected value', workspace => {
+        const composition = workspace.newBlock('composition')
+        const charAt = workspace.newBlock('charAt')
+        const number = workspace.newBlock('math_number')
+        const otherNumber = workspace.newBlock('math_number')
+  
+        connect(charAt, number, 0)
+        connect(composition, charAt, 1)
+        connect(composition, otherNumber, 2)
+  
+        assertRejectedConnection(composition, otherNumber)
+      })
+  
     })
   })
 })
