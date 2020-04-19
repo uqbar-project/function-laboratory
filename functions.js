@@ -35,8 +35,10 @@ function typeVariables(functionBlock) {
     .filter(input => input.parametricType)
     .forEach(input => {
       const typeVar = input.parametricType
-      const type = getType(input.connection.targetConnection)
-      typeMap[typeVar] = typeMap[typeVar] && typeMap[typeVar] != type ? "ERROR" : type  //TODO: Type check? 
+      const type = functionType(input.connection.targetConnection.getSourceBlock())
+      if (type != 'Any') {
+        typeMap[typeVar] = typeMap[typeVar] && typeMap[typeVar] != type ? 'ERROR' : type  //TODO: Type check? 
+      }
     })
   return typeMap
 }

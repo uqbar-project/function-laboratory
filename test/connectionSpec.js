@@ -42,15 +42,6 @@ describe('Connections', () => {
       assertRejectedConnection(not, even)
     })
 
-    onWorkspace('should not connect unexpected parameters functions with parametric type', workspace => {
-      const not = workspace.newBlock('not')
-      const id = workspace.newBlock('id')
-
-      connect(not, id)
-
-      assertRejectedConnection(not, id)
-    })
-
     describe('with parametric type', () => {
       onWorkspace('should connect matching types', workspace => {
         const compare = workspace.newBlock('compare')
@@ -70,6 +61,65 @@ describe('Connections', () => {
         connect(compare, text, 1)
         assertConnection(compare, number)
         assertRejectedConnection(compare, text)
+      })
+
+      onWorkspace('should connect expected parameters applied functions', workspace => {
+        const length = workspace.newBlock('length')
+        const id = workspace.newBlock('id')
+        const text = workspace.newBlock('text')
+  
+        connect(id, text)
+        connect(length, id)
+  
+        assertConnection(length, id)
+      })
+
+      onWorkspace('should not connect unexpected parameters functions', workspace => {
+        const not = workspace.newBlock('not')
+        const id = workspace.newBlock('id')
+  
+        connect(not, id)
+  
+        assertRejectedConnection(not, id)
+      })
+
+      onWorkspace('should not connect unexpected parameters applied functions', workspace => {
+        const not = workspace.newBlock('not')
+        const id = workspace.newBlock('id')
+        const text = workspace.newBlock('text')
+  
+        connect(id, text)
+        connect(not, id)
+  
+        assertRejectedConnection(not, id)
+      })
+      
+      onWorkspace('should connect advanced matching types', workspace => {
+        const compare = workspace.newBlock('compare')
+        const id = workspace.newBlock('id')
+        const number = workspace.newBlock('math_number')
+        const otherId = workspace.newBlock('id')
+        const otherNumber = workspace.newBlock('math_number')
+        connect(id, number)
+        connect(otherId, otherNumber)
+        connect(compare, id, 0)
+        connect(compare, otherId, 1)
+        assertConnection(compare, id)
+        assertConnection(compare, otherId)
+      })
+
+      onWorkspace('should not connect advanced not matching types', workspace => {
+        const compare = workspace.newBlock('compare')
+        const id = workspace.newBlock('id')
+        const number = workspace.newBlock('math_number')
+        const otherId = workspace.newBlock('id')
+        const text = workspace.newBlock('text')
+        connect(id, number)
+        connect(otherId, text)
+        connect(compare, id, 0)
+        connect(compare, otherId, 1)
+        assertRejectedConnection(compare, id)
+        assertConnection(compare, otherId)
       })
     })
   })
