@@ -1,8 +1,3 @@
-function applyEven(functionBlock) {
-  functionBlock.setColour(30);
-  functionBlock.getChildren().forEach((it) => it.setColour(30))
-}
-
 const isBlockInput = input => input.type === 1
 
 const isEmptyInput = input => !input.connection.targetConnection
@@ -23,8 +18,8 @@ const functionTypeToList = functionType => functionType.split('->')
 function functionType(functionBlock) {
   const inputTypes = functionBlock.inputList
     .filter(isEmptyBlockInput)
-    .map(input => getTypeInput(input))
-  return asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
+    .map(input => getInputType(input))
+  return asFunctionType(...inputTypes, getOutputType(functionBlock))
 }
 
 function outputFunctionType(functionBlock) {
@@ -46,13 +41,22 @@ function typeVariables(functionBlock) {
   return typeMap
 }
 
-function getTypeInput(input) {
+function getInputType(input) {
   if (input.parametricType) {
     const typeMap = typeVariables(input.getSourceBlock())
     return typeMap[input.parametricType] || input.parametricType
   }
 
   return getType(input.connection)
+}
+
+function getOutputType(block) {
+  if (block.parametricType) {
+    const typeMap = typeVariables(block)
+    return typeMap[block.parametricType] || block.parametricType
+  }
+
+  return getType(block.outputConnection)
 }
 
 function getType(connection) {
@@ -64,7 +68,7 @@ function checkConnectionType(connection, block, getType = functionType) {
 }
 
 function checkInputType(input, block) {
-  const inputType = getTypeInput(input)
+  const inputType = getInputType(input)
   const blockType = functionType(block)
   return inputType != 'Error' && blockType != 'Error' && (
     inputType == 'Any' || blockType == 'Any'
@@ -231,6 +235,24 @@ Blockly.Blocks['compare'] = {
     //Parametric Type
     this.inputList[0].parametricType = 'a'
     this.inputList[1].parametricType = 'a'
+  }
+}
+
+Blockly.Blocks['id'] = {
+  init: function () {
+    this.appendValueInput("PARAM")
+      .appendField("id");
+
+    this.setInputsInline(true);
+    this.setOutput(true);
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+    this.setOnChange(onChangeFunction.bind(this))
+
+    //Parametric Type
+    this.inputList[0].parametricType = 'a'
+    this.parametricType = 'a'
   }
 }
 
