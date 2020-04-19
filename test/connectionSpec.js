@@ -42,6 +42,15 @@ describe('Connections', () => {
       assertRejectedConnection(not, even)
     })
 
+    onWorkspace('should not connect unexpected parameters functions with parametric type', workspace => {
+      const not = workspace.newBlock('not')
+      const id = workspace.newBlock('id')
+
+      connect(not, id)
+
+      assertRejectedConnection(not, id)
+    })
+
     describe('with parametric type', () => {
       onWorkspace('should connect matching types', workspace => {
         const compare = workspace.newBlock('compare')

@@ -70,11 +70,17 @@ function checkConnectionType(connection, block, getType = functionType) {
 function checkInputType(input, block) {
   const inputType = getInputType(input)
   const blockType = functionType(block)
-  return inputType != 'Error' && blockType != 'Error' && (
-    inputType == 'Any' || blockType == 'Any'
-    || isVarType(inputType) || isVarType(blockType)
-    || inputType == blockType //TODO: Match types
-  )
+  const types = [inputType, blockType]
+  return !types.includes('Error') && (types.includes('Any') || matchTypes(...types))
+}
+
+function matchTypes(inputType, blockType) {
+  return structuralMatch(inputType, blockType) && //TODO: compare by structural for higher order
+    (isVarType(inputType) || isVarType(blockType) || inputType == blockType)
+}
+
+function structuralMatch(inputType, blockType) {
+  return functionTypeToList(inputType).length === functionTypeToList(blockType).length
 }
 
 function bump(block) {
