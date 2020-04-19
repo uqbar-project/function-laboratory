@@ -3,25 +3,37 @@ function applyEven(functionBlock) {
   functionBlock.getChildren().forEach((it) => it.setColour(30))
 }
 
-function isFunction(type) {
-  return type.includes("->")
-}
+const isFunction = type => type.includes("->")
 
 const asFunctionType = (...types) => types.join('->')
 
-const isBlockInput = (input) => input.type === 1
+const functionTypeToList = functionType => functionType.split('->')
 
-const isEmptyInput = (input) => !input.connection.targetConnection
+const isBlockInput = input => input.type === 1
+
+const isEmptyInput = input => !input.connection.targetConnection
+
+const isEmptyBlockInput = input => isBlockInput(input) && isEmptyInput(input)
 
 function functionType(functionBlock) {
   const inputTypes = functionBlock.inputList
-    .filter(input => isBlockInput(input) && isEmptyInput(input))
+    .filter(isEmptyBlockInput)
     .map(input => getType(input.connection))
   return asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
 }
 
+function outputFunctionType(functionBlock) {
+  const type = functionType(functionBlock)
+  if (!isFunction(type)) return null
+  return asFunctionType(...functionTypeToList(type).slice(1))
+}
+
 function getType(connection) {
   return connection.getCheck() && connection.getCheck()[0] || 'Any'
+}
+
+function checkType(connection, block, getType = functionType) {
+  return connection.checkType({ check_: [getType(block)] })
 }
 
 function bump(block) {
@@ -29,43 +41,29 @@ function bump(block) {
   block.bumpNeighbours()
 }
 
-function checkConnections(functionBlock) {
-  if (functionBlock.outputConnection.targetConnection && !functionBlock.outputConnection.targetConnection.checkType({ check_: [functionType(functionBlock)] })) {
-    bump(functionBlock)
-  }
+function firstEmptyFree(block) {
+  return block.inputList.filter(isEmptyBlockInput)[0]
 }
 
-function onChangeFunction(event) {
-  if (!this.getParent()) {
-    this.setCollapsed(false)
-  }
+function matchCompositionType(block1, block2) {
+  const input = firstEmptyFree(block1)
+  return input && checkType(input.connection, block2, outputFunctionType)
+}
 
-  if (!this.getChildren().length) {
-    this.setColour(230)
-  } else {
-    this.setColour(30)
+function matchApplyType(block1, block2) {
+  const input = firstEmptyFree(block1)
+  return input && checkType(input.connection, block2)
+}
+
+function checkParentConnection(functionBlock) {
+  if (functionBlock.outputConnection.targetConnection && !checkType(functionBlock.outputConnection.targetConnection, functionBlock)) {
+    bump(functionBlock)
   }
-  checkConnections(this)
 }
 
 function checkFunction(functionBlock) {
   if (!isFunction(functionType(functionBlock))) {
     bump(functionBlock)
-  }
-}
-
-function matchCompositionType(block1, block2) {
-  return block1.inputList[0].connection.checkType(block2.outputConnection)
-}
-
-function matchApplyType(block1, block2) {
-  return block1.inputList[0].connection.checkType({ check_: [functionType(block2)] })
-}
-
-function checkCompositionParam(param) {
-  if (param) {
-    checkFunction(param)
-    param.setCollapsed(true)
   }
 }
 
@@ -76,10 +74,31 @@ function checkComposition(block1, block2) {
   }
 }
 
+function checkCompositionParam(param) {
+  if (param) {
+    checkFunction(param)
+  }
+}
+
 function checkApply(block1, block2) {
   if (!matchApplyType(block1, block2)) {
     bump(block2)
   }
+}
+
+function onChangeFunction(event) {
+  if (this.getParent()) {
+    this.setCollapsed(true)
+  } else {
+    this.setCollapsed(false)
+  }
+
+  if (!this.getChildren().length) {
+    this.setColour(230)
+  } else {
+    this.setColour(30)
+  }
+  checkParentConnection(this)
 }
 
 function onChangeComposition(event) {
@@ -110,7 +129,8 @@ Blockly.Blocks['even'] = {
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
   }
-};
+}
+
 Blockly.Blocks['not'] = {
   init: function () {
     this.appendValueInput("NAME")
@@ -123,7 +143,57 @@ Blockly.Blocks['not'] = {
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
   }
-};
+}
+
+Blockly.Blocks['length'] = {
+  init: function () {
+    this.appendValueInput("NAME")
+      .setCheck("String")
+      .appendField("length");
+    this.setInputsInline(true);
+    this.setOutput(true, "Number");
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+    this.setOnChange(onChangeFunction.bind(this))
+  }
+}
+
+Blockly.Blocks['charAt'] = {
+  init: function () {
+    this.appendValueInput("NAME")
+      .setCheck("Number")
+      .appendField("charAt");
+
+    this.appendValueInput("NAME")
+      .setCheck("String")
+
+    this.setInputsInline(true);
+    this.setOutput(true, "String");
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+    this.setOnChange(onChangeFunction.bind(this))
+  }
+}
+
+Blockly.Blocks['compare'] = {
+  init: function () {
+    this.appendValueInput("NAME")
+      .setCheck("Number")
+      
+    this.appendValueInput("NAME")
+      .setCheck("Number")
+      .appendField(">");//TODO: Selector
+
+    this.setInputsInline(true);
+    this.setOutput(true, "Boolean");
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+    this.setOnChange(onChangeFunction.bind(this))
+  }
+}
 
 Blockly.Blocks['composition'] = {
   init: function () {
@@ -144,7 +214,7 @@ Blockly.Blocks['composition'] = {
   }
 };
 
-
+Blockly.Blocks["math_arithmetic"].onchange = function (event) { onChangeFunction.bind(this)(event) }
 Blockly.Blocks["math_number"].onchange = function (event) {
   if (event.blockId == this.id) {
     if (!this.getParent()) {
