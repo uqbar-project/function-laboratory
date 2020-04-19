@@ -78,17 +78,17 @@ function bump(block) {
   block.bumpNeighbours()
 }
 
-function firstEmptyFree(block) {
+function firstEmptyInput(block) {
   return block.inputList.filter(isEmptyBlockInput)[0]
 }
 
 function matchCompositionType(block1, block2) {
-  const input = firstEmptyFree(block1)
+  const input = firstEmptyInput(block1)
   return input && checkConnectionType(input.connection, block2, outputFunctionType)
 }
 
 function matchApplyType(block1, block2) {
-  const input = firstEmptyFree(block1)
+  const input = firstEmptyInput(block1)
   return input && checkConnectionType(input.connection, block2)
 }
 
