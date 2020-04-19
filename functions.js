@@ -3,29 +3,52 @@ function applyEven(functionBlock) {
   functionBlock.getChildren().forEach((it) => it.setColour(30))
 }
 
-const isFunction = type => type.includes("->")
-
-const asFunctionType = (...types) => types.join('->')
-
-const functionTypeToList = functionType => functionType.split('->')
-
 const isBlockInput = input => input.type === 1
 
 const isEmptyInput = input => !input.connection.targetConnection
 
 const isEmptyBlockInput = input => isBlockInput(input) && isEmptyInput(input)
 
+const isFullyBlockInput = input => isBlockInput(input) && !isEmptyInput(input)
+
+
+const isFunction = type => type.includes("->")
+
+const asFunctionType = (...types) => types.join('->')
+
+const functionTypeToList = functionType => functionType.split('->')
+
+function inferType(type, typeMap) {
+  return Object.entries(typeMap)
+    .reduce((type, [param, value]) => type.replace(param, value), type)
+}
+
 function functionType(functionBlock) {
+  const typeMap = typeVariables(functionBlock)
   const inputTypes = functionBlock.inputList
     .filter(isEmptyBlockInput)
     .map(input => getTypeInput(input))
-  return asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
+  const parametricType = asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
+  return inferType(parametricType, typeMap)
 }
 
 function outputFunctionType(functionBlock) {
   const type = functionType(functionBlock)
   if (!isFunction(type)) return null
   return asFunctionType(...functionTypeToList(type).slice(1))
+}
+
+function typeVariables(functionBlock) {
+  const typeMap = {}
+  functionBlock.inputList
+    .filter(isFullyBlockInput)
+    .filter(input => input.parametricType)
+    .forEach(input => {
+      const typeVar = input.parametricType
+      const type = getType(input.connection.targetConnection)
+      typeMap[typeVar] = type //TODO: Type check? 
+    })
+  return typeMap
 }
 
 function getTypeInput(input) {
@@ -184,7 +207,7 @@ Blockly.Blocks['charAt'] = {
 Blockly.Blocks['compare'] = {
   init: function () {
     this.appendValueInput("LEFT")
-      
+
     this.appendValueInput("RIGHT")
       .appendField(">");//TODO: Selector
 
@@ -194,7 +217,7 @@ Blockly.Blocks['compare'] = {
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
-    
+
     //Parametric Type
     this.inputList[0].parametricType = 'a'
     this.inputList[1].parametricType = 'a'

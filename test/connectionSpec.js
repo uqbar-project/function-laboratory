@@ -42,6 +42,27 @@ describe('Connections', () => {
       assertRejectedConnection(not, even)
     })
 
+    describe('with parametric type', () => {
+      onWorkspace('should connect matching types', workspace => {
+        const compare = workspace.newBlock('compare')
+        const number = workspace.newBlock('math_number')
+        const otherNumber = workspace.newBlock('math_number')
+        connect(compare, number, 0)
+        connect(compare, otherNumber, 1)
+        assertConnection(compare, number)
+        assertConnection(compare, otherNumber)
+      })
+
+      onWorkspace('should not connect not matching types', workspace => {
+        const compare = workspace.newBlock('compare')
+        const number = workspace.newBlock('math_number')
+        const text = workspace.newBlock('text')
+        connect(compare, number, 0)
+        connect(compare, text, 1)
+        assertConnection(compare, number)
+        assertRejectedConnection(compare, text)
+      })
+    })
   })
 
 
@@ -91,7 +112,7 @@ describe('Connections', () => {
 
       assertRejectedConnection(composition, number)
     })
-    
+
     onWorkspace('should connect compositionable functions', workspace => {
       const composition = workspace.newBlock('composition')
       const not = workspace.newBlock('not')
@@ -160,10 +181,10 @@ describe('Connections', () => {
         const composition = workspace.newBlock('composition')
         const charAt = workspace.newBlock('charAt')
         const length = workspace.newBlock('length')
-  
+
         connect(composition, charAt, 0)
         connect(composition, length, 1)
-  
+
         assertConnection(composition, charAt)
         assertConnection(composition, length)
       })
@@ -173,11 +194,11 @@ describe('Connections', () => {
         const not = workspace.newBlock('not')
         const compare = workspace.newBlock('compare')
         const number = workspace.newBlock('math_number')
-  
+
         connect(compare, number, 0)
         connect(composition, not, 0)
         connect(composition, compare, 1)
-  
+
         assertConnection(composition, not)
         assertConnection(composition, compare)
       })
@@ -187,25 +208,25 @@ describe('Connections', () => {
         const not = workspace.newBlock('not')
         const compare = workspace.newBlock('compare')
         const number = workspace.newBlock('math_number')
-  
+
         connect(compare, number, 1)
         connect(composition, not, 0)
         connect(composition, compare, 1)
-  
+
         assertConnection(composition, not)
         assertConnection(composition, compare)
       })
-  
+
       onWorkspace('should not connect non compositionable functions', workspace => {
         const composition = workspace.newBlock('composition')
         const charAt = workspace.newBlock('charAt')
         const length = workspace.newBlock('length')
         const number = workspace.newBlock('math_number')
-  
+
         connect(charAt, number, 0)
         connect(composition, charAt, 0)
         connect(composition, length, 1)
-  
+
         assertRejectedConnection(composition, charAt)
         assertRejectedConnection(composition, length)
       })
@@ -215,27 +236,27 @@ describe('Connections', () => {
         const charAt = workspace.newBlock('charAt')
         const number = workspace.newBlock('math_number')
         const text = workspace.newBlock('text')
-  
+
         connect(charAt, number, 0)
         connect(composition, charAt, 1)
         connect(composition, text, 2)
-  
+
         assertConnection(composition, text)
       })
-  
+
       onWorkspace('should not connect unexpected value', workspace => {
         const composition = workspace.newBlock('composition')
         const charAt = workspace.newBlock('charAt')
         const number = workspace.newBlock('math_number')
         const otherNumber = workspace.newBlock('math_number')
-  
+
         connect(charAt, number, 0)
         connect(composition, charAt, 1)
         connect(composition, otherNumber, 2)
-  
+
         assertRejectedConnection(composition, otherNumber)
       })
-  
+
     })
   })
 })

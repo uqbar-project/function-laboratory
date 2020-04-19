@@ -49,11 +49,17 @@ describe('Types', () => {
 
   describe('parametric type', () => {
 
-    onWorkspace('compare', workspace => {
+    onWorkspace('full type', workspace => {
       const compare = workspace.newBlock('compare')
       assertType(compare, 'a', 'a', 'Boolean')
     })
 
+    onWorkspace('inferred type', workspace => {
+      const compare = workspace.newBlock('compare')
+      const number = workspace.newBlock('math_number')
+      connect(compare, number, 0)
+      assertType(compare, 'Number', 'Boolean')
+    })
   })
 
   describe('composition', () => {
