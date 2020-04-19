@@ -47,6 +47,15 @@ describe('Types', () => {
 
   })
 
+  describe('parametric type', () => {
+
+    onWorkspace('compare', workspace => {
+      const compare = workspace.newBlock('compare')
+      assertType(compare, 'a', 'a', 'Boolean')
+    })
+
+  })
+
   describe('composition', () => {
 
     onWorkspace('type', workspace => {

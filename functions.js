@@ -18,7 +18,7 @@ const isEmptyBlockInput = input => isBlockInput(input) && isEmptyInput(input)
 function functionType(functionBlock) {
   const inputTypes = functionBlock.inputList
     .filter(isEmptyBlockInput)
-    .map(input => getType(input.connection))
+    .map(input => getTypeInput(input))
   return asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
 }
 
@@ -26,6 +26,10 @@ function outputFunctionType(functionBlock) {
   const type = functionType(functionBlock)
   if (!isFunction(type)) return null
   return asFunctionType(...functionTypeToList(type).slice(1))
+}
+
+function getTypeInput(input) {
+  return input.parametricType || getType(input.connection)
 }
 
 function getType(connection) {
@@ -179,11 +183,9 @@ Blockly.Blocks['charAt'] = {
 
 Blockly.Blocks['compare'] = {
   init: function () {
-    this.appendValueInput("NAME")
-      .setCheck("Number")
+    this.appendValueInput("LEFT")
       
-    this.appendValueInput("NAME")
-      .setCheck("Number")
+    this.appendValueInput("RIGHT")
       .appendField(">");//TODO: Selector
 
     this.setInputsInline(true);
@@ -192,6 +194,10 @@ Blockly.Blocks['compare'] = {
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
+    
+    //Parametric Type
+    this.inputList[0].parametricType = 'a'
+    this.inputList[1].parametricType = 'a'
   }
 }
 
