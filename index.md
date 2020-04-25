@@ -5,10 +5,11 @@
 <script src="blockly/msg/js/es.js"></script>
 <script src="functions.js"></script>
 
-<div id="blocklyDiv" style="height: 480px; width: 600px;"></div>
+<div id="blocklyDiv"></div>
 
 <xml id="toolbox" style="display: none">
   <block type="composition"></block>
+  <block type="id"></block>
   <block type="even"></block>
   <block type="not"></block>
   <block type="length"></block>

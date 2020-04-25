@@ -47,6 +47,33 @@ describe('Types', () => {
 
   })
 
+  describe('parametric type', () => {
+
+    onWorkspace('input parametric type', workspace => {
+      const compare = workspace.newBlock('compare')
+      assertType(compare, 'a', 'a', 'Boolean')
+    })
+
+    onWorkspace('output parametric type', workspace => {
+      const id = workspace.newBlock('id')
+      assertType(id, 'a', 'a')
+    })
+
+    onWorkspace('inferred input type', workspace => {
+      const compare = workspace.newBlock('compare')
+      const number = workspace.newBlock('math_number')
+      connect(compare, number, 0)
+      assertType(compare, 'Number', 'Boolean')
+    })
+
+    onWorkspace('inferred output type', workspace => {
+      const id = workspace.newBlock('id')
+      const number = workspace.newBlock('math_number')
+      connect(id, number, 0)
+      assertType(id, 'Number')
+    })
+  })
+
   describe('composition', () => {
 
     onWorkspace('type', workspace => {

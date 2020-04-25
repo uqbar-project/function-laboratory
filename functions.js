@@ -1,25 +1,25 @@
-function applyEven(functionBlock) {
-  functionBlock.setColour(30);
-  functionBlock.getChildren().forEach((it) => it.setColour(30))
-}
-
-const isFunction = type => type.includes("->")
-
-const asFunctionType = (...types) => types.join('->')
-
-const functionTypeToList = functionType => functionType.split('->')
-
 const isBlockInput = input => input.type === 1
 
 const isEmptyInput = input => !input.connection.targetConnection
 
 const isEmptyBlockInput = input => isBlockInput(input) && isEmptyInput(input)
 
+const isFullyBlockInput = input => isBlockInput(input) && !isEmptyInput(input)
+
+
+const isFunction = type => type.includes("->")
+
+const isVarType = type => type == type.toLowerCase()
+
+const asFunctionType = (...types) => types.join('->')
+
+const functionTypeToList = functionType => functionType.split('->')
+
 function functionType(functionBlock) {
   const inputTypes = functionBlock.inputList
     .filter(isEmptyBlockInput)
-    .map(input => getType(input.connection))
-  return asFunctionType(...inputTypes, getType(functionBlock.outputConnection))
+    .map(input => getInputType(input))
+  return asFunctionType(...inputTypes, getOutputType(functionBlock))
 }
 
 function outputFunctionType(functionBlock) {
@@ -28,12 +28,61 @@ function outputFunctionType(functionBlock) {
   return asFunctionType(...functionTypeToList(type).slice(1))
 }
 
+function typeVariables(functionBlock) {
+  const typeMap = {}
+  functionBlock.inputList
+    .filter(isFullyBlockInput)
+    .filter(input => input.parametricType)
+    .forEach(input => {
+      const typeVar = input.parametricType
+      const type = functionType(input.connection.targetConnection.getSourceBlock())
+      if (type != 'Any') {
+        typeMap[typeVar] = typeMap[typeVar] && typeMap[typeVar] != type ? 'ERROR' : type  //TODO: Type check? 
+      }
+    })
+  return typeMap
+}
+
+function getInputType(input) {
+  if (input.parametricType) {
+    const typeMap = typeVariables(input.getSourceBlock())
+    return typeMap[input.parametricType] || input.parametricType
+  }
+
+  return getType(input.connection)
+}
+
+function getOutputType(block) {
+  if (block.parametricType) {
+    const typeMap = typeVariables(block)
+    return typeMap[block.parametricType] || block.parametricType
+  }
+
+  return getType(block.outputConnection)
+}
+
 function getType(connection) {
   return connection.getCheck() && connection.getCheck()[0] || 'Any'
 }
 
-function checkType(connection, block, getType = functionType) {
+function checkConnectionType(connection, block, getType = functionType) {
   return connection.checkType({ check_: [getType(block)] })
+}
+
+function checkInputType(input, block) {
+  const inputType = getInputType(input)
+  const blockType = functionType(block)
+  const types = [inputType, blockType]
+  return !types.includes('Error') && (types.includes('Any') || matchTypes(...types))
+}
+
+function matchTypes(inputType, blockType) {
+  return structuralMatch(inputType, blockType) && //TODO: compare by structural for higher order
+    (isVarType(inputType) || isVarType(blockType) || inputType == blockType)
+}
+
+function structuralMatch(inputType, blockType) {
+  return functionTypeToList(inputType).length === functionTypeToList(blockType).length
 }
 
 function bump(block) {
@@ -41,23 +90,23 @@ function bump(block) {
   block.bumpNeighbours()
 }
 
-function firstEmptyFree(block) {
+function firstEmptyInput(block) {
   return block.inputList.filter(isEmptyBlockInput)[0]
 }
 
 function matchCompositionType(block1, block2) {
-  const input = firstEmptyFree(block1)
-  return input && checkType(input.connection, block2, outputFunctionType)
+  const input = firstEmptyInput(block1)
+  return input && checkConnectionType(input.connection, block2, outputFunctionType)
 }
 
 function matchApplyType(block1, block2) {
-  const input = firstEmptyFree(block1)
-  return input && checkType(input.connection, block2)
+  const input = firstEmptyInput(block1)
+  return input && checkConnectionType(input.connection, block2)
 }
 
-function checkParentConnection(functionBlock) {
-  if (functionBlock.outputConnection.targetConnection && !checkType(functionBlock.outputConnection.targetConnection, functionBlock)) {
-    bump(functionBlock)
+function checkParentConnection(block) {
+  if (block.outputConnection.targetConnection && !checkInputType(block.outputConnection.targetConnection.getParentInput(), block)) {
+    bump(block)
   }
 }
 
@@ -179,11 +228,9 @@ Blockly.Blocks['charAt'] = {
 
 Blockly.Blocks['compare'] = {
   init: function () {
-    this.appendValueInput("NAME")
-      .setCheck("Number")
-      
-    this.appendValueInput("NAME")
-      .setCheck("Number")
+    this.appendValueInput("LEFT")
+
+    this.appendValueInput("RIGHT")
       .appendField(">");//TODO: Selector
 
     this.setInputsInline(true);
@@ -192,6 +239,28 @@ Blockly.Blocks['compare'] = {
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
+
+    //Parametric Type
+    this.inputList[0].parametricType = 'a'
+    this.inputList[1].parametricType = 'a'
+  }
+}
+
+Blockly.Blocks['id'] = {
+  init: function () {
+    this.appendValueInput("PARAM")
+      .appendField("id");
+
+    this.setInputsInline(true);
+    this.setOutput(true);
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+    this.setOnChange(onChangeFunction.bind(this))
+
+    //Parametric Type
+    this.inputList[0].parametricType = 'a'
+    this.parametricType = 'a'
   }
 }
 
@@ -217,11 +286,11 @@ Blockly.Blocks['composition'] = {
 Blockly.Blocks["math_arithmetic"].onchange = function (event) { onChangeFunction.bind(this)(event) }
 Blockly.Blocks["math_number"].onchange = function (event) {
   if (event.blockId == this.id) {
-    if (!this.getParent()) {
-      this.setColour(230)
-    } else {
-      this.setColour(30)
-    }
-
+    checkParentConnection(this)
+  }
+}
+Blockly.Blocks["text"].onchange = function (event) {
+  if (event.blockId == this.id) {
+    checkParentConnection(this)
   }
 }
