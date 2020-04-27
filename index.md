@@ -3,7 +3,8 @@
 <script src="blockly/blockly_compressed.js"></script>
 <script src="blockly/blocks_compressed.js"></script>
 <script src="blockly/msg/js/es.js"></script>
-<script src="functions.js"></script>
+<script src="src/functions.js"></script>
+<script src="src/colors.js"></script>
 
 <div id="blocklyDiv"></div>
 

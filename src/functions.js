@@ -137,17 +137,12 @@ function checkApply(block1, block2) {
 
 function onChangeFunction(event) {
   if (this.getParent()) {
-    this.setCollapsed(true)
+    this.setCollapsed(true) //TODO: Always?
   } else {
     this.setCollapsed(false)
   }
-
-  if (!this.getChildren().length) {
-    this.setColour(230)
-  } else {
-    this.setColour(30)
-  }
   checkParentConnection(this)
+  this.setColour(typeToColor(functionType(this)))
 }
 
 function onChangeComposition(event) {
@@ -288,9 +283,11 @@ Blockly.Blocks["math_number"].onchange = function (event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)
   }
+  this.setColour(typeToColor(functionType(this)))
 }
 Blockly.Blocks["text"].onchange = function (event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)
   }
+  this.setColour(typeToColor(functionType(this)))
 }
