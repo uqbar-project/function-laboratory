@@ -6,8 +6,8 @@ function onChangeValue(event) {
 }
 
 function onChangeFunction(event) {
-  if (this.getParent()) {
-    this.setCollapsed(true) //TODO: Always?
+  if (this.getParent() && isFunction(functionType(this))) {
+    this.setCollapsed(true)
   } else {
     this.setCollapsed(false)
   }
