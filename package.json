@@ -4,7 +4,8 @@
   "description": "<script src=\"blockly/blockly_compressed.js\"></script> <script src=\"blockly/blocks_compressed.js\"></script> <script src=\"blockly/msg/js/es.js\"></script> <script src=\"functions.js\"></script>",
   "main": "src/functions.js",
   "scripts": {
-    "start": "rm index.html && cat index.md >> index.html",
+    "build": "rm index.html && cat index.md >> index.html",
+    "start": "npm build && google-chrome index.html",
     "test": "mocha-headless-chrome -f test/test.html"
   },
   "repository": {
