@@ -184,7 +184,7 @@ class ParametricType extends Type {
   }
 
   concretize(mappingsBetweenTypeVariableToConcreteType) {
-    return mappingsBetweenTypeVariableToConcreteType[this.typeVariableName] || this;
+    return mappingsBetweenTypeVariableToConcreteType[this.typeVariableName] || new ParametricType(this.typeVariableName + "'");
   }
 
   parametricMappings(aConcreteType) {

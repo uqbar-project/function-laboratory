@@ -370,6 +370,23 @@ describe('Connections', () => {
         assertRejectedConnection(outerComposition, innerInputComposition)
       })
 
+      onWorkspace('should connect functions that use parametric types that collide with the composition parametric types correctly', workspace => {
+        const composition = workspace.newBlock('composition')
+        const id = workspace.newBlock('id')
+        const even = workspace.newBlock('even')
+        const zero = workspace.newBlock('math_number')
+
+        // id . even $ 0
+
+        connect(composition, id, 0)
+        connect(composition, even, 1)
+        connect(composition, zero, 2)
+
+        assertConnection(composition, id)
+        assertConnection(composition, even)
+        assertConnection(composition, zero)
+      })
+
       onWorkspace('should connect expected value', workspace => {
         const composition = workspace.newBlock('composition')
         const charAt = workspace.newBlock('charAt')
