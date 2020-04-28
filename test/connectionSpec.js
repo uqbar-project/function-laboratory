@@ -104,6 +104,7 @@ describe('Connections', () => {
         connect(otherId, otherNumber)
         connect(compare, id, 0)
         connect(compare, otherId, 1)
+
         assertConnection(compare, id)
         assertConnection(compare, otherId)
       })
@@ -118,8 +119,9 @@ describe('Connections', () => {
         connect(otherId, text)
         connect(compare, id, 0)
         connect(compare, otherId, 1)
-        assertRejectedConnection(compare, id)
-        assertConnection(compare, otherId)
+
+        assertConnection(compare, id)
+        assertRejectedConnection(compare, otherId)
       })
     })
   })
@@ -192,7 +194,6 @@ describe('Connections', () => {
       connect(composition, even, 0)
       connect(composition, not, 1)
 
-      assertRejectedConnection(composition, even)
       assertRejectedConnection(composition, not)
     })
 
@@ -204,7 +205,6 @@ describe('Connections', () => {
       connect(composition, not, 0)
       connect(composition, compare, 1)
 
-      assertRejectedConnection(composition, not)
       assertRejectedConnection(composition, compare)
     })
 
@@ -286,8 +286,88 @@ describe('Connections', () => {
         connect(composition, charAt, 0)
         connect(composition, length, 1)
 
-        assertRejectedConnection(composition, charAt)
         assertRejectedConnection(composition, length)
+      })
+
+      onWorkspace('should connect nested compositionable composition with function', workspace => {
+        const outerComposition = workspace.newBlock('composition')
+        const innerComposition = workspace.newBlock('composition')
+        const not = workspace.newBlock('not')
+        const anotherNot = workspace.newBlock('not')
+        const even = workspace.newBlock('even')
+
+        // (not . not) . even
+
+        connect(innerComposition, not, 0)
+        connect(innerComposition, anotherNot, 1)
+        connect(outerComposition, innerComposition, 0)
+        connect(outerComposition, even, 1)
+
+        assertConnection(innerComposition, not)
+        assertConnection(innerComposition, anotherNot)
+
+        assertConnection(outerComposition, innerComposition)
+        assertConnection(outerComposition, even)
+      })
+
+      onWorkspace('should not connect nested composition with function when they are not composable', workspace => {
+        const outerComposition = workspace.newBlock('composition')
+        const innerComposition = workspace.newBlock('composition')
+        const not = workspace.newBlock('not')
+        const anotherNot = workspace.newBlock('not')
+        const length = workspace.newBlock('length')
+
+        // (not . not) . length
+
+        connect(innerComposition, not, 0)
+        connect(innerComposition, anotherNot, 1)
+        connect(outerComposition, innerComposition, 0)
+        connect(outerComposition, length, 1)
+
+        assertRejectedConnection(outerComposition, length)
+      })
+
+      onWorkspace('should connect 2 nested compositions that are composable', workspace => {
+        const outerComposition = workspace.newBlock('composition')
+        const innerInputComposition = workspace.newBlock('composition')
+        const innerOutputComposition = workspace.newBlock('composition')
+        const not = workspace.newBlock('not')
+        const anotherNot = workspace.newBlock('not')
+        const even = workspace.newBlock('even')
+        const length = workspace.newBlock('length')
+
+        connect(innerInputComposition, even, 0)
+        connect(innerInputComposition, length, 1)
+        connect(innerOutputComposition, not, 0)
+        connect(innerOutputComposition, anotherNot, 1)
+        connect(outerComposition, innerOutputComposition, 0)
+        connect(outerComposition, innerInputComposition, 1)
+
+        // (not . not) . (even . length)
+
+        assertConnection(outerComposition, innerInputComposition)
+        assertConnection(outerComposition, innerOutputComposition)
+      })
+
+      onWorkspace('should not connect 2 nested compositions that are not composable', workspace => {
+        const outerComposition = workspace.newBlock('composition')
+        const innerInputComposition = workspace.newBlock('composition')
+        const innerOutputComposition = workspace.newBlock('composition')
+        const not = workspace.newBlock('not')
+        const even = workspace.newBlock('even')
+        const anotherEven = workspace.newBlock('even')
+        const length = workspace.newBlock('length')
+
+        // (not . even) . (even . length)
+
+        connect(innerInputComposition, even, 0)
+        connect(innerInputComposition, length, 1)
+        connect(innerOutputComposition, not, 0)
+        connect(innerOutputComposition, anotherEven, 1)
+        connect(outerComposition, innerOutputComposition, 0)
+        connect(outerComposition, innerInputComposition, 1)
+
+        assertRejectedConnection(outerComposition, innerInputComposition)
       })
 
       onWorkspace('should connect expected value', workspace => {

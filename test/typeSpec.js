@@ -12,7 +12,7 @@ describe('Types', () => {
 
     onWorkspace('type', workspace => {
       const even = workspace.newBlock('even')
-      assertType(even, 'Number', 'Boolean')
+      assertType(even, ['Number', 'Boolean'])
     })
 
     onWorkspace('applied type', workspace => {
@@ -28,21 +28,21 @@ describe('Types', () => {
 
     onWorkspace('type', workspace => {
       const charAt = workspace.newBlock('charAt')
-      assertType(charAt, 'Number', 'String', 'String')
+      assertType(charAt, ['Number', 'String', 'String'])
     })
 
     onWorkspace('first param applied type', workspace => {
       const charAt = workspace.newBlock('charAt')
       const number = workspace.newBlock('math_number')
       connect(charAt, number, 0)
-      assertType(charAt, 'String', 'String')
+      assertType(charAt, ['String', 'String'])
     })
 
     onWorkspace('second param applied type', workspace => {
       const charAt = workspace.newBlock('charAt')
       const text = workspace.newBlock('text')
       connect(charAt, text, 1)
-      assertType(charAt, 'Number', 'String')
+      assertType(charAt, ['Number', 'String'])
     })
 
   })
@@ -51,26 +51,26 @@ describe('Types', () => {
 
     onWorkspace('input parametric type', workspace => {
       const compare = workspace.newBlock('compare')
-      assertType(compare, 'a', 'a', 'Boolean')
+      assertType(compare, ['a', 'a', 'Boolean'])
     })
 
     onWorkspace('output parametric type', workspace => {
       const id = workspace.newBlock('id')
-      assertType(id, 'a', 'a')
+      assertType(id, ['a', 'a'])
     })
 
     onWorkspace('inferred input type', workspace => {
       const compare = workspace.newBlock('compare')
       const number = workspace.newBlock('math_number')
       connect(compare, number, 0)
-      assertType(compare, 'Number', 'Boolean')
+      assertType(compare, ['Number', 'Boolean'])
     })
 
     onWorkspace('inferred output type', workspace => {
       const id = workspace.newBlock('id')
       const number = workspace.newBlock('math_number')
       connect(id, number, 0)
-      assertType(id, 'Number')
+      assertType(id, ['Number'])
     })
   })
 
@@ -78,13 +78,13 @@ describe('Types', () => {
 
     onWorkspace('type', workspace => {
       const composition = workspace.newBlock('composition')
-      assertType(composition, 'Any', 'Any', 'Any', 'Any')
+      assertType(composition, [['b','c'], ['a', 'b'], 'a', 'c'])
     })
 
   })
 
 })
 
-const assertType = (block, ...types) => {
-  assert.equal(functionType(block), asFunctionType(...types))
+const assertType = (block, type) => {
+  assert.equal(currentType(block).toString(), createType(type).toString())
 }

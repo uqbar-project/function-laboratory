@@ -1,88 +1,232 @@
-const isBlockInput = input => input.type === 1
-
-const isEmptyInput = input => !input.connection.targetConnection
-
-const isEmptyBlockInput = input => isBlockInput(input) && isEmptyInput(input)
-
-const isFullyBlockInput = input => isBlockInput(input) && !isEmptyInput(input)
-
-
-const isFunction = type => type.includes("->")
-
-const isVarType = type => type == type.toLowerCase()
-
-const asFunctionType = (...types) => types.join('->')
-
-const functionTypeToList = functionType => functionType.split('->')
-
-function functionType(functionBlock) {
-  const inputTypes = functionBlock.inputList
-    .filter(isEmptyBlockInput)
-    .map(input => getInputType(input))
-  return asFunctionType(...inputTypes, getOutputType(functionBlock))
-}
-
-function outputFunctionType(functionBlock) {
-  const type = functionType(functionBlock)
-  if (!isFunction(type)) return null
-  return asFunctionType(...functionTypeToList(type).slice(1))
-}
-
-function typeVariables(functionBlock) {
-  const typeMap = {}
-  functionBlock.inputList
-    .filter(isFullyBlockInput)
-    .filter(input => input.parametricType)
-    .forEach(input => {
-      const typeVar = input.parametricType
-      const type = functionType(input.connection.targetConnection.getSourceBlock())
-      if (type != 'Any') {
-        typeMap[typeVar] = typeMap[typeVar] && typeMap[typeVar] != type ? 'ERROR' : type  //TODO: Type check? 
-      }
-    })
-  return typeMap
-}
-
-function getInputType(input) {
-  if (input.parametricType) {
-    const typeMap = typeVariables(input.getSourceBlock())
-    return typeMap[input.parametricType] || input.parametricType
+class Type {
+  matches(otherType) {
+    throw "Subclass responsibility"
   }
 
-  return getType(input.connection)
-}
-
-function getOutputType(block) {
-  if (block.parametricType) {
-    const typeMap = typeVariables(block)
-    return typeMap[block.parametricType] || block.parametricType
+  matchesFunctionType(aFunctionType) {
+    throw "Subclass responsibility"
   }
 
-  return getType(block.outputConnection)
+  matchesSingleType(aSingleType) {
+    throw "Subclass responsibility"
+  }
+
+  toString() {
+    throw "Subclass responsibility"
+  }
+
+  parametricMappings(aConcreteType) {
+    throw "Subclass responsibility"
+  }
+
+  parametricMappingsForFunctionType(aFunctionType) {
+    throw "Subclass responsibility"
+  }
+
+  parametricMappingsForSingleType(aSingleType) {
+    throw "Subclass responsibility"
+  }
+
+  parametricMappingsForParametricType(aParametricType) {
+    throw "Subclass responsibility"
+  }
+
+  concretize(mappingsBetweenTypeVariableToConcreteType) {
+    throw "Subclass responsibility"
+  }
 }
 
-function getType(connection) {
-  return connection.getCheck() && connection.getCheck()[0] || 'Any'
+class FunctionType extends Type {
+  constructor(inputType, outputType) {
+    super();
+    this.inputType = inputType;
+    this.outputType = outputType;
+  }
+
+  matches(otherType) {
+    return otherType.matchesFunctionType(this);
+  }
+
+  matchesFunctionType(otherFunctionType) {
+    return this.inputType.matches(otherFunctionType.inputType) && this.outputType.matches(otherFunctionType.outputType);
+  }
+
+  matchesSingleType(aSingleType) {
+    return false;
+  }
+
+  toString() {
+    return "(" + this.inputType.toString() + " -> " + this.outputType.toString() + ")";
+  }
+
+  canApply(aType, position) {
+    return this.inputTypeAtPosition(position).matches(aType);
+  }
+
+  parametricMappings(aConcreteType) {
+    return aConcreteType.parametricMappingsForFunctionType(this);
+  }
+
+  parametricMappingsForFunctionType(aFunctionType) {
+    return {...this.inputType.parametricMappings(aFunctionType.inputType),
+            ...this.outputType.parametricMappings(aFunctionType.outputType)}
+  }
+
+  parametricMappingsForSingleType(aSingleType) {
+    return { };
+  }
+
+  parametricMappingsForParametricType(aParametricType) {
+    return aParametricType.mappingForConcreteType(this);
+  }
+
+  inputTypeAtPosition(position) {
+    if(position == 0) {
+      return this.inputType;
+    } else {
+      return this.outputType.inputTypeAtPosition(position - 1);
+    }
+  }
+
+  validateApplication(aType, position) {
+    if(!this.canApply(aType, position)) {
+      throw "No match error"
+    };
+  }
+
+  applied(aType, position) {
+    this.validateApplication(aType, position);
+
+    const newType = position == 0 ? this.outputType : new FunctionType(this.inputType, this.outputType.applied(aType, position - 1))
+    
+    const parametricToConcreteMappings = this.inputTypeAtPosition(position).parametricMappings(aType);
+
+    return newType.concretize(parametricToConcreteMappings)
+  }
+
+  concretize(mappingsBetweenTypeVariableToConcreteType) {
+    return new FunctionType(this.inputType.concretize(mappingsBetweenTypeVariableToConcreteType),
+                            this.outputType.concretize(mappingsBetweenTypeVariableToConcreteType))
+  }
 }
 
-function checkConnectionType(connection, block, getType = functionType) {
-  return connection.checkType({ check_: [getType(block)] })
+class SingleType extends Type {
+  constructor(typeName) {
+    super();
+    this.typeName = typeName;
+  }
+
+  matches(otherType) {
+    return otherType.matchesSingleType(this);
+  }
+
+  matchesFunctionType(aFunctionType) {
+    return false;
+  }
+
+  matchesSingleType(aSingleType) {
+    return this.typeName == aSingleType.typeName;
+  }
+
+  toString() {
+    return this.typeName;
+  }
+
+  apply() {
+    throw "Single types can not be applied";
+  }
+
+  concretize(mappingsBetweenTypeVariableToConcreteType) {
+    return this;
+  }
+
+  parametricMappings(aConcreteType) {
+    return aConcreteType.parametricMappingsForSingleType(this);
+  }
+
+  parametricMappingsForFunctionType(aFunctionType) {
+    return {};
+  }
+
+  parametricMappingsForSingleType(aSingleType) {
+    return {};
+  }
+
+  parametricMappingsForParametricType(aParametricType) {
+    return aParametricType.mappingForConcreteType(this);
+  }
 }
 
-function checkInputType(input, block) {
-  const inputType = getInputType(input)
-  const blockType = functionType(block)
-  const types = [inputType, blockType]
-  return !types.includes('Error') && (types.includes('Any') || matchTypes(...types))
+class ParametricType extends Type {
+  constructor(typeVariableName) {
+    super();
+    this.typeVariableName = typeVariableName;
+  }
+
+  matches(otherType) {
+    return true;
+  }
+
+  matchesFunctionType(aFunctionType) {
+    return true;
+  }
+
+  matchesSingleType(aSingleType) {
+    return true;
+  }
+
+  toString() {
+    return this.typeVariableName;
+  }
+
+  apply() {
+    throw "Parametric type can not be applied";
+  }
+
+  concretize(mappingsBetweenTypeVariableToConcreteType) {
+    return mappingsBetweenTypeVariableToConcreteType[this.typeVariableName] || this;
+  }
+
+  parametricMappings(aConcreteType) {
+    return aConcreteType.parametricMappingsForParametricType(this);
+  }
+
+  parametricMappingsForFunctionType(aFunctionType) {
+    return this.mappingForConcreteType(aFunctionType);
+  }
+
+  parametricMappingsForSingleType(aSingleType) {
+    return this.mappingForConcreteType(aSingleType);
+  }
+
+  parametricMappingsForParametricType(aParametricType) {
+    return this.mappingForConcreteType(aParametricType);
+  }
+
+  mappingForConcreteType(concreteType) {
+    const mapping = {};
+    mapping[this.typeVariableName] = concreteType;
+    return mapping;
+  }
 }
 
-function matchTypes(inputType, blockType) {
-  return structuralMatch(inputType, blockType) && //TODO: compare by structural for higher order
-    (isVarType(inputType) || isVarType(blockType) || inputType == blockType)
-}
-
-function structuralMatch(inputType, blockType) {
-  return functionTypeToList(inputType).length === functionTypeToList(blockType).length
+const createType = (typeName) => {
+  if(Array.isArray(typeName)) {
+    if (typeName.length > 1) {
+      const [inputTypeName, ...returnTypeNames] = typeName;
+      const outputType = createType(returnTypeNames);
+      const inputType = createType(inputTypeName);
+      return new FunctionType(inputType, outputType);
+    } else {
+      return createType(typeName[0]);
+    }
+  } else {
+    if(typeName[0] == typeName[0].toLowerCase()) {
+      return new ParametricType(typeName)
+    } else {
+      return new SingleType(typeName);
+    }
+  }
 }
 
 function bump(block) {
@@ -90,48 +234,11 @@ function bump(block) {
   block.bumpNeighbours()
 }
 
-function firstEmptyInput(block) {
-  return block.inputList.filter(isEmptyBlockInput)[0]
-}
-
-function matchCompositionType(block1, block2) {
-  const input = firstEmptyInput(block1)
-  return input && checkConnectionType(input.connection, block2, outputFunctionType)
-}
-
-function matchApplyType(block1, block2) {
-  const input = firstEmptyInput(block1)
-  return input && checkConnectionType(input.connection, block2)
-}
-
-function checkParentConnection(block) {
-  if (block.outputConnection.targetConnection && !checkInputType(block.outputConnection.targetConnection.getParentInput(), block)) {
-    bump(block)
-  }
-}
-
-function checkFunction(functionBlock) {
-  if (!isFunction(functionType(functionBlock))) {
-    bump(functionBlock)
-  }
-}
-
-function checkComposition(block1, block2) {
-  if (!matchCompositionType(block1, block2)) {
-    bump(block1)
-    bump(block2)
-  }
-}
-
-function checkCompositionParam(param) {
-  if (param) {
-    checkFunction(param)
-  }
-}
-
-function checkApply(block1, block2) {
-  if (!matchApplyType(block1, block2)) {
-    bump(block2)
+function checkChildrenConnections(block) {
+  try {
+    currentType(block);
+  } catch {
+    block.getChildren().reverse().forEach(bump);
   }
 }
 
@@ -147,23 +254,31 @@ function onChangeFunction(event) {
   } else {
     this.setColour(30)
   }
-  checkParentConnection(this)
+
+  checkChildrenConnections(this);
 }
 
-function onChangeComposition(event) {
-  const f1 = this.inputList[0].connection.targetBlock()
-  const f2 = this.inputList[1].connection.targetBlock()
-  const value = this.inputList[2].connection.targetBlock()
+const childrenTypesWithIndex = (block) => {
+  const typesWithIndexes = []
+  block.inputList.forEach((input, i) => {
+      if (input.connection && input.connection.targetConnection) {
+        typesWithIndexes.push({ childrenType: currentType(input.connection.targetConnection.sourceBlock_), position: i})
+      }
+    }
+  )
+  return typesWithIndexes;
+}
 
-  checkCompositionParam(f1)
-  checkCompositionParam(f2)
+const currentType = (block) => {
+  const childrenTypes = childrenTypesWithIndex(block)
 
-  if (f1 && f2) {
-    checkComposition(f1, f2)
-  }
-  if (f2 && value) {
-    checkApply(f2, value)
-  }
+  return childrenTypes.reduce(({timesTypesWereAppliedSoFar, currentType}, {childrenType, position}) =>
+  (
+    {
+      currentType: currentType.applied(childrenType, position - timesTypesWereAppliedSoFar),
+      timesTypesWereAppliedSoFar: timesTypesWereAppliedSoFar + 1
+    }
+  ), {timesTypesWereAppliedSoFar: 0, currentType: block.fullType}).currentType
 }
 
 Blockly.Blocks['even'] = {
@@ -176,9 +291,10 @@ Blockly.Blocks['even'] = {
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
+    this.setOnChange(onChangeFunction.bind(this));
+    this.fullType = createType(["Number", "Boolean"]);
   }
-}
+};  
 
 Blockly.Blocks['not'] = {
   init: function () {
@@ -190,7 +306,8 @@ Blockly.Blocks['not'] = {
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
+    this.setOnChange(onChangeFunction.bind(this));
+    this.fullType = createType(["Boolean", "Boolean"]);
   }
 }
 
@@ -204,7 +321,8 @@ Blockly.Blocks['length'] = {
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
+    this.setOnChange(onChangeFunction.bind(this));
+    this.fullType = createType(["String", "Number"]);
   }
 }
 
@@ -222,7 +340,8 @@ Blockly.Blocks['charAt'] = {
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
+    this.setOnChange(onChangeFunction.bind(this));
+    this.fullType = createType(["Number", "String", "String"]);
   }
 }
 
@@ -240,6 +359,7 @@ Blockly.Blocks['compare'] = {
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
 
+    this.fullType = createType(["a", "a", "Boolean"]);
     //Parametric Type
     this.inputList[0].parametricType = 'a'
     this.inputList[1].parametricType = 'a'
@@ -259,6 +379,7 @@ Blockly.Blocks['id'] = {
     this.setOnChange(onChangeFunction.bind(this))
 
     //Parametric Type
+    this.fullType = createType(["a", "a"]);
     this.inputList[0].parametricType = 'a'
     this.parametricType = 'a'
   }
@@ -279,18 +400,14 @@ Blockly.Blocks['composition'] = {
     this.setColour('gray')
     this.setTooltip("");
     this.setHelpUrl("");
-    this.setOnChange(onChangeComposition.bind(this))
+    this.setOnChange(onChangeFunction.bind(this))
+    this.fullType = createType([["b", "c"], ["a", "b"], "a", "c"]);
   }
 };
 
+Blockly.Blocks["math_number"].fullType = createType("Number")
+
+Blockly.Blocks["math_arithmetic"].fullType = createType(["Number", "Number", "Number"])
 Blockly.Blocks["math_arithmetic"].onchange = function (event) { onChangeFunction.bind(this)(event) }
-Blockly.Blocks["math_number"].onchange = function (event) {
-  if (event.blockId == this.id) {
-    checkParentConnection(this)
-  }
-}
-Blockly.Blocks["text"].onchange = function (event) {
-  if (event.blockId == this.id) {
-    checkParentConnection(this)
-  }
-}
+
+Blockly.Blocks["text"].fullType = createType("String")
