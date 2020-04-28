@@ -2,7 +2,7 @@ function onChangeValue(event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)
   }
-  this.setColour(typeToColor(functionType(this)))
+  this.setColour(colorShow(this))
 }
 
 function onChangeFunction(event) {
@@ -12,7 +12,7 @@ function onChangeFunction(event) {
     this.setCollapsed(false)
   }
   checkParentConnection(this)
-  this.setColour(typeToColor(functionType(this)))
+  this.setColour(colorShow(this))
 }
 
 function onChangeComposition(event) {
