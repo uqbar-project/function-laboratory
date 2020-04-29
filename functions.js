@@ -237,7 +237,8 @@ function bump(block) {
 function checkChildrenConnections(block) {
   try {
     currentType(block);
-  } catch {
+  } catch (error) {
+    errorReporter.report(error);
     block.getChildren().reverse().forEach(bump);
   }
 }
@@ -258,10 +259,10 @@ function onChangeFunction(event) {
   checkChildrenConnections(this);
 }
 
-const childrenTypesWithIndex = (block) => {
+var childrenTypesWithIndex = (block) => {
   const typesWithIndexes = []
   block.inputList.forEach((input, i) => {
-      if (input.connection && input.connection.targetConnection) {
+      if (input.connection && input.connection.targetConnection && !input.connection.targetConnection.sourceBlock_.isInsertionMarker()) {
         typesWithIndexes.push({ childrenType: currentType(input.connection.targetConnection.sourceBlock_), position: i})
       }
     }
@@ -411,3 +412,7 @@ Blockly.Blocks["math_arithmetic"].fullType = createType(["Number", "Number", "Nu
 Blockly.Blocks["math_arithmetic"].onchange = function (event) { onChangeFunction.bind(this)(event) }
 
 Blockly.Blocks["text"].fullType = createType("String")
+
+const errorReporter = {
+  report: (error) => alert(error),
+}
