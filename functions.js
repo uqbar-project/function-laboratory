@@ -19,6 +19,13 @@ class Type {
     throw "Subclass responsibility"
   }
 
+  bind(otherType) {
+    const myParametricMappings = otherType.parametricMappings(this);
+    const otherTypeConcretizedToMe = otherType.concretize(myParametricMappings)
+    const theirParametricMappings = this.parametricMappings(otherTypeConcretizedToMe);
+    return this.concretize(theirParametricMappings);
+  }
+
   parametricMappingsForFunctionType(aFunctionType) {
     throw "Subclass responsibility"
   }
@@ -44,7 +51,7 @@ class FunctionType extends Type {
   }
 
   matches(otherType) {
-    return otherType.matchesFunctionType(this);
+    return otherType.bind(this).matchesFunctionType(this);
   }
 
   matchesFunctionType(otherFunctionType) {
@@ -68,8 +75,16 @@ class FunctionType extends Type {
   }
 
   parametricMappingsForFunctionType(aFunctionType) {
-    return {...this.inputType.parametricMappings(aFunctionType.inputType),
-            ...this.outputType.parametricMappings(aFunctionType.outputType)}
+    const inputMappings = this.inputType.parametricMappings(aFunctionType.inputType);
+    const outputMappings = this.outputType.parametricMappings(aFunctionType.outputType);
+
+    Object.keys(inputMappings).concat(Object.keys(outputMappings)).forEach(t => {
+      if(inputMappings[t] && outputMappings[t] && (!inputMappings[t].matches(outputMappings[t]))) {
+        throw "No match error, expected " + this.toString() + ", but got " + aFunctionType.toString()
+      }
+    })
+
+    return {...inputMappings, ...outputMappings}
   }
 
   parametricMappingsForSingleType(aSingleType) {
@@ -88,18 +103,22 @@ class FunctionType extends Type {
     }
   }
 
-  validateApplication(aType, position) {
-    if(!this.canApply(aType, position)) {
-      throw "No match error"
+  validateApplication(expectedType, actualBoundType, originalType) {
+    if(!expectedType.matches(actualBoundType)) {
+      throw "No match error, expected " + expectedType.toString() + ", but got " + originalType.toString()
     };
   }
 
   applied(aType, position) {
-    this.validateApplication(aType, position);
+    const expectedType = this.inputTypeAtPosition(position);
 
-    const newType = position == 0 ? this.outputType : new FunctionType(this.inputType, this.outputType.applied(aType, position - 1))
-    
-    const parametricToConcreteMappings = this.inputTypeAtPosition(position).parametricMappings(aType);
+    const actualBoundType = aType.bind(expectedType);
+
+    this.validateApplication(expectedType, actualBoundType, aType);
+
+    const parametricToConcreteMappings = expectedType.parametricMappings(actualBoundType);
+
+    const newType = position == 0 ? this.outputType : new FunctionType(this.inputType, this.outputType.applied(actualBoundType, position - 1))
 
     return newType.concretize(parametricToConcreteMappings)
   }

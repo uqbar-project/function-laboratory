@@ -370,7 +370,7 @@ describe('Connections', () => {
         assertRejectedConnection(outerComposition, innerInputComposition)
       })
 
-      onWorkspace('should connect functions that use parametric types that collide with the composition parametric types correctly', workspace => {
+      onWorkspace('should connect functions that use parametric types that collide with the composition parametric types when they are composable', workspace => {
         const composition = workspace.newBlock('composition')
         const id = workspace.newBlock('id')
         const even = workspace.newBlock('even')
@@ -385,6 +385,21 @@ describe('Connections', () => {
         assertConnection(composition, id)
         assertConnection(composition, even)
         assertConnection(composition, zero)
+      })
+
+      onWorkspace('should not connect functions that use parametric types that collide with the composition parametric types when they are not composable', workspace => {
+        const composition = workspace.newBlock('composition')
+        const id = workspace.newBlock('id')
+        const not = workspace.newBlock('not')
+        const zero = workspace.newBlock('math_number')
+
+        // not . id $ 0
+
+        connect(composition, not, 0)
+        connect(composition, id, 1)
+        connect(composition, zero, 2)
+
+        assertRejectedConnection(composition, zero)
       })
 
       onWorkspace('should connect expected value', workspace => {
