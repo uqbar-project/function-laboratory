@@ -86,5 +86,5 @@ describe('Types', () => {
 })
 
 const assertType = (block, ...types) => {
-  assert.equal(functionType(block), asFunctionType(...types))
+  assert.equal(blockType(block), asFunctionType(...types))
 }
