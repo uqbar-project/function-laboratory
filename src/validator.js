@@ -1,12 +1,7 @@
-
-function checkConnectionType(connection, block, getType = functionType) {
-  return connection.checkType({ check_: [getType(block)] })
-}
-
 function checkInputType(input, block) {
-  const inputType = getInputType(input)
-  const blockType = functionType(block)
-  const types = [inputType, blockType]
+  const expectedType = getInputType(input)
+  const actualType = blockType(block)
+  const types = [expectedType, actualType]
   return !types.includes('Error') && (types.includes('Any') || matchTypes(...types))
 }
 
@@ -30,12 +25,12 @@ function firstEmptyInput(block) {
 
 function matchCompositionType(block1, block2) {
   const input = firstEmptyInput(block1)
-  return input && checkConnectionType(input.connection, block2, outputFunctionType)
+  return input && matchTypes(getInputType(input), outputFunctionType(block2))
 }
 
 function matchApplyType(block1, block2) {
   const input = firstEmptyInput(block1)
-  return input && checkConnectionType(input.connection, block2)
+  return input && matchTypes(getInputType(input), blockType(block2))
 }
 
 function checkParentConnection(block) {
@@ -45,7 +40,7 @@ function checkParentConnection(block) {
 }
 
 function checkFunction(functionBlock) {
-  if (!isFunction(functionType(functionBlock))) {
+  if (!isFunction(blockType(functionBlock))) {
     bump(functionBlock)
   }
 }

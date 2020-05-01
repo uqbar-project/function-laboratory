@@ -6,7 +6,7 @@ function onChangeValue(event) {
 }
 
 function onChangeFunction(event) {
-  if (this.getParent() && isFunction(functionType(this))) {
+  if (this.getParent() && isFunction(blockType(this))) {
     this.setCollapsed(true)
   } else {
     this.setCollapsed(false)
@@ -31,63 +31,74 @@ function onChangeComposition(event) {
   }
 }
 
+function setFunctionType(block, ...types) {
+  const outputType = types.slice(-1)[0];
+  const inputTypes = types.slice(0, -1);
+
+  inputTypes.forEach((inputType, i) => { block.inputList[i].inputType = inputType });
+  block.outputType = outputType;
+}
+
 Blockly.Blocks['even'] = {
   init: function () {
     this.appendValueInput("NAME")
-      .setCheck("Number")
       .appendField("even");
     this.setInputsInline(true);
-    this.setOutput(true, "Boolean");
+    this.setOutput(true);
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
+
+    setFunctionType(this, "Number", "Boolean")
   }
 }
 
 Blockly.Blocks['not'] = {
   init: function () {
     this.appendValueInput("NAME")
-      .setCheck("Boolean")
       .appendField("not");
     this.setInputsInline(true);
-    this.setOutput(true, "Boolean");
+    this.setOutput(true);
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
+
+    setFunctionType(this, "Boolean", "Boolean")
   }
 }
 
 Blockly.Blocks['length'] = {
   init: function () {
     this.appendValueInput("NAME")
-      .setCheck("String")
       .appendField("length");
     this.setInputsInline(true);
-    this.setOutput(true, "Number");
+    this.setOutput(true);
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
+
+    setFunctionType(this, "String", "Number")
   }
 }
 
 Blockly.Blocks['charAt'] = {
   init: function () {
     this.appendValueInput("NAME")
-      .setCheck("Number")
       .appendField("charAt");
 
     this.appendValueInput("NAME")
-      .setCheck("String")
 
     this.setInputsInline(true);
-    this.setOutput(true, "String");
+    this.setOutput(true);
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
+
+    setFunctionType(this, "Number", "String", "String")
   }
 }
 
@@ -99,15 +110,14 @@ Blockly.Blocks['compare'] = {
       .appendField(">");//TODO: Selector
 
     this.setInputsInline(true);
-    this.setOutput(true, "Boolean");
+    this.setOutput(true);
     this.setColour(230);
     this.setTooltip("");
     this.setHelpUrl("");
     this.setOnChange(onChangeFunction.bind(this))
 
     //Parametric Type
-    this.inputList[0].parametricType = 'a'
-    this.inputList[1].parametricType = 'a'
+    setFunctionType(this, "a", "a", "Boolean")
   }
 }
 
@@ -124,8 +134,7 @@ Blockly.Blocks['id'] = {
     this.setOnChange(onChangeFunction.bind(this))
 
     //Parametric Type
-    this.inputList[0].parametricType = 'a'
-    this.parametricType = 'a'
+    setFunctionType(this, "a", "a")
   }
 }
 

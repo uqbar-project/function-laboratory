@@ -6,7 +6,7 @@ const typeColors = {
   'Any': defaultColor
 }
 
-const colorType = (block) => typeToColor(functionType(block))
+const colorType = (block) => typeToColor(blockType(block))
 
 const typeToColor = (type) => {
   if (isFunction(type)) return interpolateColors(functionTypeToList(type))

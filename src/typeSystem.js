@@ -6,7 +6,7 @@ const asFunctionType = (...types) => types.join('->')
 
 const functionTypeToList = functionType => functionType.split('->')
 
-function functionType(functionBlock) {
+function blockType(functionBlock) {
   const inputTypes = functionBlock.inputList
     .filter(isEmptyBlockInput)
     .map(input => getInputType(input))
@@ -14,7 +14,7 @@ function functionType(functionBlock) {
 }
 
 function outputFunctionType(functionBlock) {
-  const type = functionType(functionBlock)
+  const type = blockType(functionBlock)
   if (!isFunction(type)) return null
   return asFunctionType(...functionTypeToList(type).slice(1))
 }
@@ -23,10 +23,10 @@ function typeVariables(functionBlock) {
   const typeMap = {}
   functionBlock.inputList
     .filter(isFullyBlockInput)
-    .filter(input => input.parametricType)
+    .filter(input => input.inputType && isVarType(input.inputType))
     .forEach(input => {
-      const typeVar = input.parametricType
-      const type = functionType(input.connection.targetConnection.getSourceBlock())
+      const typeVar = input.inputType
+      const type = blockType(input.connection.targetConnection.getSourceBlock())
       if (type != 'Any') {
         typeMap[typeVar] = typeMap[typeVar] && typeMap[typeVar] != type ? 'ERROR' : type  //TODO: Type check? 
       }
@@ -35,23 +35,24 @@ function typeVariables(functionBlock) {
 }
 
 function getInputType(input) {
-  if (input.parametricType) {
+  if (input.inputType) {
     const typeMap = typeVariables(input.getSourceBlock())
-    return typeMap[input.parametricType] || input.parametricType
+    return typeMap[input.inputType] || input.inputType
   }
 
   return getType(input.connection)
 }
 
 function getOutputType(block) {
-  if (block.parametricType) {
+  if (block.outputType) {
     const typeMap = typeVariables(block)
-    return typeMap[block.parametricType] || block.parametricType
+    return typeMap[block.outputType] || block.outputType
   }
 
   return getType(block.outputConnection)
 }
 
 function getType(connection) {
+  
   return connection.getCheck() && connection.getCheck()[0] || 'Any'
 }
