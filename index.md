@@ -9,7 +9,7 @@
 <script src="src/utils.js"></script>
 <script src="src/functions.js"></script>
 
-<div id="blocklyDiv"></div>
+<div id="blocklyDiv" style="height: 480px; width: 600px;"></div>
 
 <xml id="toolbox" style="display: none">
   <block type="composition"></block>
