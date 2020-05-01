@@ -2,14 +2,17 @@
 
 describe('Colors', () => {
 
+  const Boolean = createType('Boolean')
+  const Number = createType('Number')
+
   onWorkspace('value', workspace => {
     const number = workspace.newBlock('math_number')
-    assertColor(number, typeToColor('Number'))
+    assertColor(number, typeToColor(Number))
   })
 
   onWorkspace('function', workspace => {
     const even = workspace.newBlock('even')
-    assertColor(even, typeToColor('Number') + typeToColor('Boolean'))
+    assertColor(even, typeToColor(Number) + typeToColor(Boolean))
   })
 
   onWorkspace('partial applied function with same type', workspace => {
@@ -24,8 +27,8 @@ describe('Colors', () => {
     const even = workspace.newBlock('even')
     const number = workspace.newBlock('math_number')
     connect(even, number)
-    assertColor(even, typeToColor('Boolean'))
-    assertColor(number, typeToColor('Boolean'))
+    assertColor(even, typeToColor(Boolean))
+    assertColor(number, typeToColor(Boolean))
   })
 
   onWorkspace('applied function with functions', workspace => {
@@ -34,9 +37,9 @@ describe('Colors', () => {
     const number = workspace.newBlock('math_number')
     connect(even, number)
     connect(not, even)
-    assertColor(not, typeToColor('Boolean'))
-    assertColor(even, typeToColor('Boolean'))
-    assertColor(number, typeToColor('Boolean'))
+    assertColor(not, typeToColor(Boolean))
+    assertColor(even, typeToColor(Boolean))
+    assertColor(number, typeToColor(Boolean))
   })
 })
 

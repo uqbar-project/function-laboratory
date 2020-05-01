@@ -78,7 +78,7 @@ describe('Types', () => {
 
     onWorkspace('type', workspace => {
       const composition = workspace.newBlock('composition')
-      assertType(composition, 'Any', 'Any', 'Any', 'Any')
+      assertType(composition, ['b', 'c'], ['a', 'b'], 'a', 'c')
     })
 
   })
@@ -86,5 +86,5 @@ describe('Types', () => {
 })
 
 const assertType = (block, ...types) => {
-  assert.equal(blockType(block), asFunctionType(...types))
+  assert.equal(blockType(block).toString(), createType([types]).toString())
 }
