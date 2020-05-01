@@ -1,4 +1,5 @@
 theme: jekyll-theme-modernist
 exclude: ['README.md']
+include: ['content.html']
 title: Laboratorio de Funciones
 description: ¡Jugá operando con las funciones y valores!
