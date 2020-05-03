@@ -43,6 +43,10 @@ class Type {
     throw "Subclass responsibility"
   }
 
+  toStringAsInput() {
+    return this.toString()
+  }
+
   toColor(_typeColors) {
     throw "Subclass responsibility"
   }
@@ -96,8 +100,12 @@ class FunctionType extends Type {
     return [new EqConstraint(otherType, this)]
   }
 
+  toStringAsInput() {
+    return "(" + this.toString() + ")"
+  }
+
   toString() {
-    return "(" + this.inputType.toString() + " -> " + this.outputType.toString() + ")";
+    return this.inputType.toStringAsInput() + " -> " + this.outputType.toString()
   }
 
   toColor(typeColors) {
