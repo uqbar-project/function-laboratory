@@ -6,12 +6,12 @@ function onChangeValue(event) {
 }
 
 function onChangeFunction(event) {
+  checkParentConnection(this)
   if (this.getParent() && isFunction(blockType(this))) {
     this.setCollapsed(true)
   } else {
     this.setCollapsed(false)
   }
-  checkParentConnection(this)
   this.setColour(colorShow(this))
 }
 

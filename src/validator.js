@@ -3,13 +3,22 @@ function bump(block) {
   block.bumpNeighbours()
 }
 
-function checkType(block) {
+function checkInputConnection(input) {
+  const targetBlock = input.connection.targetConnection.getSourceBlock()
   try {
-    blockType(block)
+    const inputType = getInputType(input)
+    const targetType = blockType(targetBlock)
+    const result = solveConstraints({ constraints: inputType.eqConstraints(targetType) })
+    if (result.error) { bump(targetBlock) }
   } catch {
-    const [...children] = block.getChildren()
-    children.forEach(bump)
+    bump(targetBlock)
   }
+}
+
+function checkType(block) {
+  block.inputList
+    .filter(isFullyBlockInput)
+    .forEach(input => checkInputConnection(input))
 }
 
 function checkParentConnection(block) {
