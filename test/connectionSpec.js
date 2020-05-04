@@ -59,8 +59,6 @@ describe('Connections', () => {
         const text = workspace.newBlock('text')
         connect(compare, number, 0)
         connect(compare, text, 1)
-
-        assertRejectedConnection(compare, number)
         assertRejectedConnection(compare, text)
       })
 
@@ -119,8 +117,6 @@ describe('Connections', () => {
         connect(otherId, text)
         connect(compare, id, 0)
         connect(compare, otherId, 1)
-
-        assertRejectedConnection(compare, id)
         assertRejectedConnection(compare, otherId)
       })
     })
@@ -210,11 +206,8 @@ describe('Connections', () => {
       const composition = workspace.newBlock('composition')
       const even = workspace.newBlock('even')
       const not = workspace.newBlock('not')
-
       connect(composition, even, 0)
       connect(composition, not, 1)
-
-      assertRejectedConnection(composition, even)
       assertRejectedConnection(composition, not)
     })
 
@@ -222,11 +215,8 @@ describe('Connections', () => {
       const composition = workspace.newBlock('composition')
       const not = workspace.newBlock('not')
       const compare = workspace.newBlock('compare')
-
       connect(composition, not, 0)
       connect(composition, compare, 1)
-
-      assertRejectedConnection(composition, not)
       assertRejectedConnection(composition, compare)
     })
 
@@ -248,11 +238,9 @@ describe('Connections', () => {
       const not = workspace.newBlock('not')
       const even = workspace.newBlock('even')
       const text = workspace.newBlock('text')
-
       connect(composition, not, 0)
       connect(composition, even, 1)
       connect(composition, text, 2)
-
       assertRejectedConnection(composition, text)
     })
 
@@ -303,12 +291,9 @@ describe('Connections', () => {
         const charAt = workspace.newBlock('charAt')
         const length = workspace.newBlock('length')
         const number = workspace.newBlock('math_number')
-
         connect(charAt, number, 0)
         connect(composition, charAt, 0)
         connect(composition, length, 1)
-
-        assertRejectedConnection(composition, charAt)
         assertRejectedConnection(composition, length)
       })
 
@@ -470,9 +455,9 @@ describe('Connections', () => {
 })
 
 const assertConnection = (parentBlock, block) => {
-  assert.include(parentBlock.getChildren(), block)
+  assert.include(parentBlock.getChildren().map(({id}) => id), block.id)
 }
 
 const assertRejectedConnection = (parentBlock, block) => {
-  assert.notInclude(parentBlock.getChildren(), block)
+  assert.notInclude(parentBlock.getChildren().map(({id}) => id), block.id)
 }
