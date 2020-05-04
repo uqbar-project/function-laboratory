@@ -27,6 +27,7 @@ const onWorkspace = (name, test) => {
 const connect = (block, parameterBlock, inputIndex = 0) => {
   tryConnect(block, parameterBlock, inputIndex)
   forceBlocklyEvents()
+  forceBlocklyEvents() // ??
 }
 
 const tryConnect = (block, parameterBlock, inputIndex = 0) => {
