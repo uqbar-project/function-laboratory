@@ -234,8 +234,6 @@ const isFunction = type => type.isFunctionType()
 
 const isVarType = type => type.isVarType()
 
-const hasTypeVariables = type => type.isVarType() || (isFunction(type) && (hasTypeVariables(type.inputType) || hasTypeVariables(type.outputType)))
-
 function createFunctionType(types) {
   return types.reduceRight((outputType, inputType) => new FunctionType(inputType, outputType))
 }
