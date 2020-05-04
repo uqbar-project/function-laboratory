@@ -1,8 +1,3 @@
----
-layout: content
-title:  "Welcome to Jekyll!"
----
-
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 
 <script src="blockly/blockly_compressed.js"></script>
@@ -14,7 +9,7 @@ title:  "Welcome to Jekyll!"
 <script src="src/utils.js"></script>
 <script src="src/functions.js"></script>
 
-<div id="blocklyDiv"></div>
+<div id="blocklyDiv" style="height: 500px; width: inherit;"></div>
 
 <xml id="toolbox" style="display: none">
   <block type="composition"></block>
@@ -32,4 +27,3 @@ title:  "Welcome to Jekyll!"
 <script>
   var workspace = Blockly.inject('blocklyDiv', {toolbox: document.getElementById('toolbox')})
 </script>
-  
