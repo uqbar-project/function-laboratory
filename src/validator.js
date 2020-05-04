@@ -16,11 +16,9 @@ function checkInputConnection(input) {
 }
 
 function checkType(block) {
-  block.inputList
-    .filter(isFullyBlockInput)
-    .forEach(input => checkInputConnection(input))
+  checkInputConnection(block.outputConnection.targetConnection.getParentInput())
 }
 
 function checkParentConnection(block) {
-  block.getParent() && checkType(block.getParent())
+  block.getParent() && checkType(block)
 }
