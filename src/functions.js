@@ -6,34 +6,20 @@ function onChangeValue(event) {
 }
 
 function onChangeFunction(event) {
+  if (event.blockId == this.id) {
+    checkParentConnection(this)
+  }
   if (this.getParent() && isFunction(blockType(this))) {
     this.setCollapsed(true)
   } else {
     this.setCollapsed(false)
   }
-  checkParentConnection(this)
   this.setColour(colorShow(this))
 }
 
-function onChangeComposition(event) {
-  const f1 = this.inputList[0].connection.targetBlock()
-  const f2 = this.inputList[1].connection.targetBlock()
-  const value = this.inputList[2].connection.targetBlock()
-
-  checkCompositionParam(f1)
-  checkCompositionParam(f2)
-
-  if (f1 && f2) {
-    checkComposition(f1, f2)
-  }
-  if (f2 && value) {
-    checkApply(f2, value)
-  }
-}
-
 function setFunctionType(block, ...types) {
-  const outputType = types.slice(-1)[0];
-  const inputTypes = types.slice(0, -1);
+  const outputType = createType(types.slice(-1)[0]);
+  const inputTypes = types.slice(0, -1).map(type => createType(type));
 
   inputTypes.forEach((inputType, i) => { block.inputList[i].inputType = inputType });
   block.outputType = outputType;
@@ -153,10 +139,37 @@ Blockly.Blocks['composition'] = {
     this.setColour('gray')
     this.setTooltip("");
     this.setHelpUrl("");
-    this.setOnChange(onChangeComposition.bind(this))
+    this.setOnChange(onChangeFunction.bind(this))
+
+    setFunctionType(this, ["b", "c"], ["a", "b"], "a", "c")
   }
 };
 
-Blockly.Blocks["math_arithmetic"].onchange = function (event) { onChangeFunction.bind(this)(event) }
+Blockly.Blocks['apply'] = {
+  init: function () {
+    this.appendValueInput("function")
+      .setCheck(null)
+    this.appendValueInput("VALUE")
+      .setCheck(null)
+      .appendField("$");
+    this.setInputsInline(true);
+    this.setOutput(true, null);
+    this.setColour('gray')
+    this.setTooltip("");
+    this.setHelpUrl("");
+    this.setOnChange(onChangeFunction.bind(this))
+
+    setFunctionType(this, ["a", "b"], "a", "b")
+  }
+};
+
+Blockly.Blocks["math_arithmetic"].onchange = function (event) {
+  setFunctionType(this, "Number", "Number", "Number")
+  onChangeFunction.bind(this)(event)
+}
+
 Blockly.Blocks["math_number"].onchange = function (event) { onChangeValue.bind(this)(event) }
+Blockly.Blocks["math_number"].outputType = createType("Number")
+
+Blockly.Blocks["text"].outputType = createType("String")
 Blockly.Blocks["text"].onchange = function (event) { onChangeValue.bind(this)(event) }

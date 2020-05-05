@@ -3,6 +3,8 @@
 <script src="blockly/blockly_compressed.js"></script>
 <script src="blockly/blocks_compressed.js"></script>
 <script src="blockly/msg/js/es.js"></script>
+<script src="src/renaming.js"></script>
+<script src="src/constraintSolving.js"></script>
 <script src="src/typeSystem.js"></script>
 <script src="src/validator.js"></script>
 <script src="src/colors.js"></script>
