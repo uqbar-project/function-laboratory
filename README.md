@@ -1,5 +1,7 @@
 ## Laboratorio de funciones
 
+![logo](imgs/logo.png)
+
 Este proyecto fue creado con la intención de familiarizarse con el paradigma de programación **Funcional**.
 
 Consiste en visualizar las funciones y valores como bloques que se van encastrando, permitiendo entender la estructura de las expresiones más fácilmente que con texto. 
