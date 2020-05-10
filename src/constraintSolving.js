@@ -1,19 +1,19 @@
-const solveConstraints = ({ constraints, typeDictionary = {}}) => {
+const solveConstraints = ({ constraints, typeDictionary = {} }) => {
   const [constraint, ...restOfConstraints] = constraints
 
-  if(constraints.length == 0) { return { constraints, typeDictionary } }
+  if (constraints.length == 0) { return { constraints, typeDictionary } }
 
   const constraintResult = constraint.solve()
-  
-  if(constraintResult.error) { return constraintResult }
+
+  if (constraintResult.error) { return constraintResult }
 
   const typeDictionaryAfterReplacements = mapValues(type => type.replacing(constraintResult))(typeDictionary)
 
   const newConstraints = restOfConstraints.map(constraint => constraint.replace(constraintResult))
 
-  const newTypeDictionary = {...typeDictionaryAfterReplacements, ...constraintResult}
+  const newTypeDictionary = { ...typeDictionaryAfterReplacements, ...constraintResult }
 
-  return solveConstraints({constraints: newConstraints, typeDictionary: newTypeDictionary})
+  return solveConstraints({ constraints: newConstraints, typeDictionary: newTypeDictionary })
 }
 
 class ConstraintError {
@@ -37,7 +37,7 @@ class EqConstraint {
   }
 
   solve() {
-    if(this.a.isSameType(this.b)) {
+    if (this.a.isSameType(this.b)) {
       return {}
     } else if (this.a.isVarType() && this.b.includes(this.a) || this.b.isVarType() && this.b.includes(this.b)) {
       return { error: "Impossible recursive type" }
@@ -46,7 +46,7 @@ class EqConstraint {
     } else if (this.b.isVarType()) {
       return { [this.b.typeVariableName]: this.a }
     } else if (this.a.isFunctionType() && this.b.isFunctionType()) {
-      return solveConstraints({constraints: this.a.eqConstraints(this.b)}).typeDictionary
+      return solveConstraints({ constraints: this.a.eqConstraints(this.b) }).typeDictionary
     } else {
       return { error: "Type Error" }
     }
@@ -56,3 +56,21 @@ class EqConstraint {
     return this.a.toString() + " ~ " + this.b.toString()
   }
 }
+
+class SimpleEqConstraint extends EqConstraint {
+  constructor(simpleType, otherType) {
+    super(simpleType, otherType)
+    this.simpleType = simpleType
+    this.otherType = otherType
+  }
+
+  solve() {
+    try {
+      return this.otherType.restrictToSimple(this.simpleType)
+    } catch(e) {
+      return { error: e }
+    }
+  }
+}
+
+const typeError = (expectedType, currentType) => `Se esperaba ${expectedType.toString()} pero se obtuvo ${currentType.toString()}`

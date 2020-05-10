@@ -1,8 +1,4 @@
 class Type {
-  eqConstraints(otherType) {
-    throw "Subclass responsibility"
-  }
-
   allTypeVariableNamesUsed(otherType) {
     throw "Subclass responsibility"
   }
@@ -15,7 +11,7 @@ class Type {
     throw "Subclass responsibility"
   }
 
-  eqConstraintsForSingleType(otherType) {
+  eqConstraints(otherType) {
     throw "Subclass responsibility"
   }
 
@@ -28,6 +24,10 @@ class Type {
   }
 
   replacing(typeMap) {
+    throw "Subclass responsibility"
+  }
+
+  restrictToSimple(type) {
     throw "Subclass responsibility"
   }
 
@@ -84,12 +84,12 @@ class FunctionType extends Type {
     return new FunctionType(this.inputType.replacing(typeMap), this.outputType.replacing(typeMap))
   }
 
-  eqConstraints(otherType) {
-    return otherType.eqConstraintsForFunctionType(this)
+  restrictToSimple(type) {
+    throw typeError(type.toString(), this.toString())
   }
 
-  eqConstraintsForSingleType(_otherType) {
-    return [new ConstraintError("Type Error")]
+  eqConstraints(otherType) {
+    return otherType.eqConstraintsForFunctionType(this)
   }
 
   eqConstraintsForFunctionType(otherType) {
@@ -119,10 +119,6 @@ class SingleType extends Type {
     this.typeName = typeName;
   }
 
-  replacing(typeMap) {
-    return this
-  }
-
   allTypeVariableNamesUsed() {
     return []
   }
@@ -135,12 +131,18 @@ class SingleType extends Type {
     return false
   }
 
-  eqConstraints(otherType) {
-    return otherType.eqConstraintsForSingleType(this)
+  replacing(typeMap) {
+    return this
   }
 
-  eqConstraintsForSingleType(otherType) {
-    return [new EqConstraint(otherType, this)]
+  //TODO: Simple or Single?
+  restrictToSimple(type) {
+    if (type.typeName == this.typeName) return {} //TODO: Mover esto a las constraint
+    throw typeError(type.toString(), this.toString())
+  }
+
+  eqConstraints(otherType) {
+    return [new SimpleEqConstraint(this, otherType)]
   }
 
   eqConstraintsForFunctionType(_otherType) {
@@ -186,15 +188,15 @@ class ParametricType extends Type {
     return (typeMap[this.typeVariableName] && typeMap[this.typeVariableName].replacing(typeMap)) || this
   }
 
+  restrictToSimple(type) {
+    return { [this.typeVariableName]: type }
+  }
+
   eqConstraints(otherType) {
     return otherType.eqConstraintsForParametricType(this)
   }
 
   eqConstraintsForParametricType(otherType) {
-    return [new EqConstraint(otherType, this)]
-  }
-
-  eqConstraintsForSingleType(otherType) {
     return [new EqConstraint(otherType, this)]
   }
 
@@ -212,7 +214,7 @@ class ParametricType extends Type {
 }
 
 const createType = (typeName) => {
-  if(Array.isArray(typeName)) {
+  if (Array.isArray(typeName)) {
     if (typeName.length > 1) {
       const [inputTypeName, ...returnTypeNames] = typeName;
       const outputType = createType(returnTypeNames);
@@ -222,7 +224,7 @@ const createType = (typeName) => {
       return createType(typeName[0]);
     }
   } else {
-    if(typeName[0] == typeName[0].toLowerCase()) {
+    if (typeName[0] == typeName[0].toLowerCase()) {
       return new ParametricType(typeName)
     } else {
       return new SingleType(typeName);
@@ -255,23 +257,23 @@ function constraints(block) {
       const expectedType = input.inputType
       const actualType = blockType(input.connection.targetConnection.getSourceBlock())
       return { expected: expectedType, actual: actualType }
-  })
+    })
 
-  const expectedTypes = typeMatches.map(({expected}) => expected)
-  const actualTypes = typeMatches.map(({actual}) => actual)
+  const expectedTypes = typeMatches.map(({ expected }) => expected)
+  const actualTypes = typeMatches.map(({ actual }) => actual)
 
   const renamedActualTypes = renameTypeMatches(fullUnappliedType(block), actualTypes)
 
   const constraints = zip(expectedTypes, renamedActualTypes)
-                        .flatMap(([expected, actual]) => expected.eqConstraints(actual))
+    .flatMap(([expected, actual]) => expected.eqConstraints(actual))
 
   return constraints
 }
 
 function typeVariables(functionBlock) {
-  const result = solveConstraints({constraints: constraints(functionBlock), typeDictionary: {}})
+  const result = solveConstraints({ constraints: constraints(functionBlock), typeDictionary: {} })
 
-  if(result.typeDictionary) {
+  if (result.typeDictionary) {
     return result.typeDictionary
   } else {
     throw new Error(result.error)
@@ -285,8 +287,8 @@ function getInputType(input) {
 
 function getInputTypes(block) {
   return block.inputList
-          .filter(isEmptyBlockInput)
-          .map(input => getInputType(input))
+    .filter(isEmptyBlockInput)
+    .map(input => getInputType(input))
 }
 
 function getOutputType(block) {
