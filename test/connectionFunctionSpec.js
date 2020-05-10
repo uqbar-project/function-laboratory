@@ -1,8 +1,8 @@
 'use strict'
 
-describe('Connections', () => {
+describe('Function connections', () => {
 
-  describe('Functions', () => {
+  describe('Simple', () => {
 
     onWorkspace('should connect expected parameters value', workspace => {
       const even = workspace.newBlock('even')
@@ -521,11 +521,3 @@ describe('Connections', () => {
   })
 
 })
-
-const assertConnection = (parentBlock, block) => {
-  assert.include(parentBlock.getChildren().map(({ id }) => id), block.id)
-}
-
-const assertRejectedConnection = (parentBlock, block) => {
-  assert.notInclude(parentBlock.getChildren().map(({ id }) => id), block.id)
-}

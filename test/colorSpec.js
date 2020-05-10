@@ -42,7 +42,3 @@ describe('Colors', () => {
     assertColor(number, typeToColor(Boolean))
   })
 })
-
-const assertColor = (block, color) => {
-  assert.equal(colorShow(block), color)
-}

@@ -6,9 +6,15 @@ const isEmptyInput = input => !input.connection.targetConnection
 const isEmptyBlockInput = input => isBlockInput(input) && isEmptyInput(input)
 
 const isFullyBlockInput = input => isBlockInput(input) && !isEmptyInput(input)
+
+const getInputField = input => input.fieldRow[0].getValue()
+
+const blockInputs = block => block.inputList.filter(isBlockInput)
 // Blockly
 
 // Iterables
+const last = list => list.reverse()[0]
+
 const zipWith = (f) => (aList, anotherList) => aList.map((x, i) => f(x, anotherList[i]))
 
 const zip = zipWith((x, y) => [x, y])
