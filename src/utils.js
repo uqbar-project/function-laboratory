@@ -10,6 +10,13 @@ const isFullyBlockInput = input => isBlockInput(input) && !isEmptyInput(input)
 const getInputField = input => input.fieldRow[0].getValue()
 
 const blockInputs = block => block.inputList.filter(isBlockInput)
+
+const removeInput = block => input => block.removeInput(input.name)
+
+const renameField = (input, name) => {
+  input.removeField()
+  input.appendField(name)
+}
 // Blockly
 
 // Iterables

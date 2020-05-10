@@ -23,20 +23,13 @@ function onChangeList(event) {
   if (this.workspace.isDragging()) {
     return;  // Don't change state at the start of a drag.
   }
-  const lastBlockInput = this.inputList[this.inputList.length - 2]
   const emptyInputs = this.inputList.filter(isEmptyBlockInput)
-  if (emptyInputs.length !== 1 || !isEmptyBlockInput(lastBlockInput)) {
-    emptyInputs.forEach(input => { this.removeInput(input.name) })
-
+  if (emptyInputs.length !== 1 || !isEmptyBlockInput(last(emptyInputs))) {
+    emptyInputs.forEach(removeInput(this))
     const newInputName = `ELEMENT${this.inputIndex++}`
-    this.appendValueInput(newInputName)
-      .appendField(",")
-      .inputType = createType("a")
-    this.moveInputBefore(newInputName, "CLOSE")
-
-    this.inputList[0].removeField()
-    this.inputList[0].appendField("[")
+    appendNewInputList(this, newInputName)
   }
+  renameField(this.inputList[0], "[")
 }
 
 
@@ -222,18 +215,22 @@ Blockly.Blocks['list'] = {
    * @this Blockly.Block
    */
   domToMutation: function (xmlElement) {
-    this.inputList.forEach(input => { this.removeInput(input.name) })
+    this.inputList.forEach(removeInput(this))
 
     for (var i = 0, childNode; childNode = xmlElement.childNodes[i]; i++) {
       if (childNode.nodeName.toLowerCase() == 'arg') {
         const inputName = childNode.getAttribute('name')
-        this.appendValueInput(inputName)
-          .appendField("[")
-          .inputType = createType("a")
-        this.moveInputBefore(inputName, "CLOSE")
+        appendNewInputList(this, inputName)
       }
     }
   },
+}
+
+const appendNewInputList = (block, inputName) => {
+  block.appendValueInput(inputName)
+    .appendField(",")
+    .inputType = createType("a")
+  block.moveInputBefore(inputName, "CLOSE")
 }
 
 Blockly.Blocks["math_arithmetic"].onchange = function (event) {
