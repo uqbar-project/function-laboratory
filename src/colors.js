@@ -1,11 +1,15 @@
-const defaultColor = 0
+const defaultColor = 360 / 5
 
 const colorTypes = {
-  'Boolean': 20,
-  'Number': 60,
-  'String': 160,
+  'Boolean': 360 / 5 * 2,
+  'Number': 360 / 5 * 3,
+  'String': 360 / 5 * 4,
+  'Function': 10,
+  'List': 40,
   'Any': defaultColor
 }
+
+const colorForType = (name) => colorTypes[name] || defaultColor
 
 const colorType = (block) => {
   try { return typeToColor(blockType(block)) }

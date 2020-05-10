@@ -75,7 +75,7 @@ class EstructuralType extends Type {
   }
 
   toColor(typeColors) {
-    return this.attributeValues().map(type => type.toColor(typeColors)).reduce(add, 0)
+    return this.attributeValues().map(type => type.toColor(typeColors)).reduce(add, colorForType(this.name))
   }
 }
 
@@ -157,7 +157,7 @@ class SingleType extends Type {
   }
 
   toColor(typeColors) {
-    return typeColors[this.typeName] || 0;
+    return colorForType(this.typeName)
   }
 }
 
