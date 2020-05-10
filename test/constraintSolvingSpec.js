@@ -10,6 +10,7 @@ describe('Constraint Solving', () => {
   const String = createType("String")
   const Number = createType("Number")
   const a = createType("a")
+  const List = new ListType(createType('element'))
 
   it('single type with itself works', () => {
     const constraints = Number.eqConstraints(Number)
@@ -27,12 +28,44 @@ describe('Constraint Solving', () => {
     assertTypeError(result, typeError(Number, String))
   })
 
-  it('parametric type with single type works', () => {
+  it('list type with itself works', () => {
+    const constraints = List.eqConstraints(List)
+
+    const result = solveConstraints({ constraints })
+
+    assertTypeVariables(result, { element: createType('element') })
+  })
+
+  it('list type to function type fails', () => {
+    const constraints = List.eqConstraints(Number)
+
+    const result = solveConstraints({ constraints })
+
+    assertTypeError(result, typeError(List, Number))
+  })
+
+  it('parametric type to single type works', () => {
     const constraints = a.eqConstraints(String)
 
     const result = solveConstraints({ constraints })
 
     assertTypeVariables(result, { a: String })
+  })
+
+  it('parametric type to list type works', () => {
+    const constraints = createType("a").eqConstraints(List)
+
+    const result = solveConstraints({ constraints })
+
+    assertTypeVariables(result, { a: List })
+  })
+
+  it('parametric type to function of single types works', () => {
+    const constraints = createType("a").eqConstraints(createType(["Number", "Number"]))
+
+    const result = solveConstraints({ constraints })
+
+    assertTypeVariables(result, { a: createType(["Number", "Number"]) })
   })
 
   it('function of parametric types to single type fails', () => {
@@ -83,14 +116,6 @@ describe('Constraint Solving', () => {
     const result = solveConstraints({ constraints })
 
     assertTypeVariables(result, { a: createType("b"), b: createType("b") }) //TODO: Remove redundant
-  })
-
-  it('parametric type to function of single types works', () => {
-    const constraints = createType("a").eqConstraints(createType(["Number", "Number"]))
-
-    const result = solveConstraints({ constraints })
-
-    assertTypeVariables(result, { a: createType(["Number", "Number"]) })
   })
 
   it('function of parametric types to a new parametric type works', () => {
@@ -155,7 +180,7 @@ describe('Constraint Solving', () => {
     const constraints = inputType.eqConstraints(blockType)
 
     const result = solveConstraints({ constraints })
-    
+
     assertTypeError(result, typeError(inputType, blockType))
   })
 
