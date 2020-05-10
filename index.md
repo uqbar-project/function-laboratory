@@ -15,6 +15,7 @@
 
 <xml id="toolbox" style="display: none">
   <block type="composition"></block>
+  <block type="list"></block>
   <block type="id"></block>
   <block type="even"></block>
   <block type="not"></block>

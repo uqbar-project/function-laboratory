@@ -104,6 +104,22 @@ class FunctionType extends EstructuralType {
 
 }
 
+class ListType extends EstructuralType {
+  constructor(elementType) {
+    super('List', { elementType })
+    this.elementType = elementType
+  }
+
+  replacing(typeMap) {
+    return new ListType(this.elementType.replacing(typeMap))
+  }
+
+  toString() {
+    return `[${this.elementType.toString()}]`
+  }
+
+}
+
 class SingleType extends Type {
   constructor(typeName) {
     super();
@@ -268,5 +284,8 @@ function getOutputType(block) {
 }
 
 function blockType(block) {
-  return createFunctionType([...getInputTypes(block), getOutputType(block)])
+  if (block.type == 'list') //TODO
+    return getOutputType(block)
+  else
+    return createFunctionType([...getInputTypes(block), getOutputType(block)])
 }

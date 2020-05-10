@@ -17,6 +17,32 @@ function onChangeFunction(event) {
   this.setColour(colorShow(this))
 }
 
+function onChangeList(event) {
+  onChangeValue.bind(this)(event)
+
+  //TODO: Fix
+  if (event.newParentId == this.id || event.oldParentId == this.id) {
+    const lastDummyInput = this.inputList[this.inputList.length - 1]
+    // const lastBlockInput = this.inputList[this.inputList.length - 2]
+    const emptyInputs = this.inputList.filter(isEmptyBlockInput)
+    if (emptyInputs.length !== 1) {
+      emptyInputs.forEach(input => {
+        input.connection.disconnect()
+        input.dispose()
+      })
+      lastDummyInput.dispose()
+
+      this.appendValueInput(`ELEMENT${this.inputList.length}`)
+        .appendField(",")
+        .inputType = createType("a")
+
+      this.appendDummyInput("")
+        .appendField("]")
+    }
+  }
+}
+
+
 function setFunctionType(block, ...types) {
   const outputType = createType(types.slice(-1)[0]);
   const inputTypes = types.slice(0, -1).map(type => createType(type));
@@ -161,7 +187,23 @@ Blockly.Blocks['apply'] = {
 
     setFunctionType(this, ["a", "b"], "a", "b")
   }
-};
+}
+
+Blockly.Blocks['list'] = {
+  init: function () {
+    this.appendValueInput("ELEMENT")
+      .appendField("[")
+      .inputType = createType("a")
+    this.appendDummyInput("")
+      .appendField("]")
+    this.setInputsInline(true)
+    this.setOutput(true, null)
+    this.setTooltip("")
+    this.setHelpUrl("")
+    this.setOnChange(function (event) { onChangeList.bind(this)(event) })
+    this.outputType = new ListType(createType("a"))
+  }
+}
 
 Blockly.Blocks["math_arithmetic"].onchange = function (event) {
   setFunctionType(this, "Number", "Number", "Number")
