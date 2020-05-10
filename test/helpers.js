@@ -23,15 +23,9 @@ const onWorkspace = (name, test) => {
 }
 
 const connect = (block, parameterBlock, inputIndex = 0) => {
-  tryConnect(block, parameterBlock, inputIndex)
+  block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
   forceBlocklyEvents()
   forceBlocklyEvents() // ??
-}
-
-const tryConnect = (block, parameterBlock, inputIndex = 0) => {
-  try {
-    block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
-  } catch { }
 }
 
 const disconnect = (block, inputIndex = 0) => {
