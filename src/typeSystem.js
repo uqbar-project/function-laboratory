@@ -40,37 +40,31 @@ class Type {
   }
 }
 
-class FunctionType extends Type {
-  constructor(inputType, outputType) {
+class EstructuralType extends Type {
+  constructor(name, attributes) {
     super();
-    this.inputType = inputType;
-    this.outputType = outputType;
+    this.name = name
+    this.attributes = attributes
   }
 
-  isFunctionType() {
-    return true
-  }
+  attributeValues() { return Object.values(this.attributes) }
 
   allTypeVariableNamesUsed() {
-    return this.inputType.allTypeVariableNamesUsed().concat(this.outputType.allTypeVariableNamesUsed())
+    return this.attributeValues().flatMap(type => type.allTypeVariableNamesUsed())
   }
 
-  includes(parametricType) {
+  includes(parametricType) { //TODO: Revisar esto
     const typeVariableName = parametricType.typeVariableName
-    return (this.inputType.typeVariableName == typeVariableName || this.outputType.typeVariableName == typeVariableName) ||
-      this.inputType.includes(parametricType) || this.outputType.includes(parametricType)
-  }
-
-  replacing(typeMap) {
-    return new FunctionType(this.inputType.replacing(typeMap), this.outputType.replacing(typeMap))
+    return this.attributeValues().some(type => type.typeVariableName == typeVariableName || type.includes(parametricType))
   }
 
   restrictToSimple(type) {
-    throw typeError(type.toString(), this.toString())
+    throw typeError(type, this)
   }
 
   restrictToComposite(type) { //TODO: Mover a constraints
-    const constraints = type.inputType.eqConstraints(this.inputType).concat(type.outputType.eqConstraints(this.outputType))
+    const constraints = Object.values(zipObjects(type.attributes, this.attributes)).flatMap(([type1, type2]) => type1.eqConstraints(type2))
+    if (constraints.length !== this.attributeValues().length) throw typeError(type, this)
     const result = solveConstraints({ constraints })
     if (result.error) throw result.error
     return result.typeDictionary
@@ -78,6 +72,26 @@ class FunctionType extends Type {
 
   eqConstraints(otherType) {
     return [new CompositeEqConstraint(this, otherType)]
+  }
+
+  toColor(typeColors) {
+    return this.attributeValues().map(type => type.toColor(typeColors)).reduce(add, 0)
+  }
+}
+
+class FunctionType extends EstructuralType {
+  constructor(inputType, outputType) {
+    super('Function', { inputType, outputType })
+    this.inputType = inputType
+    this.outputType = outputType
+  }
+
+  isFunctionType() {
+    return true
+  }
+
+  replacing(typeMap) {
+    return new FunctionType(this.inputType.replacing(typeMap), this.outputType.replacing(typeMap))
   }
 
   toStringAsInput() {
@@ -88,9 +102,6 @@ class FunctionType extends Type {
     return this.inputType.toStringAsInput() + " -> " + this.outputType.toString()
   }
 
-  toColor(typeColors) {
-    return this.inputType.toColor(typeColors) + this.outputType.toColor(typeColors)
-  }
 }
 
 class SingleType extends Type {
@@ -114,7 +125,7 @@ class SingleType extends Type {
   //TODO: Simple or Single?
   restrictToSimple(type) {
     if (type.typeName == this.typeName) return {} //TODO: Mover esto a las constraint
-    throw typeError(type.toString(), this.toString())
+    throw typeError(type, this)
   }
 
   restrictToComposite(type) {
