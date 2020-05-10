@@ -9,7 +9,7 @@ function onChangeFunction(event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)
   }
-  if (this.getParent() && blockType(this).isFunctionType()) { //TODO: Remove isFunctionType() when this change
+  if (this.getParent() && blockType(this).isFunctionType()) {
     this.setCollapsed(true)
   } else {
     this.setCollapsed(false)
@@ -19,26 +19,23 @@ function onChangeFunction(event) {
 
 function onChangeList(event) {
   onChangeValue.bind(this)(event)
+  if (this.inputIndex === undefined) { this.inputIndex = 1 }
+  if (this.workspace.isDragging()) {
+    return;  // Don't change state at the start of a drag.
+  }
+  const lastBlockInput = this.inputList[this.inputList.length - 2]
+  const emptyInputs = this.inputList.filter(isEmptyBlockInput)
+  if (emptyInputs.length !== 1 || !isEmptyBlockInput(lastBlockInput)) {
+    emptyInputs.forEach(input => { this.removeInput(input.name) })
 
-  //TODO: Fix
-  if (event.newParentId == this.id || event.oldParentId == this.id) {
-    const lastDummyInput = this.inputList[this.inputList.length - 1]
-    // const lastBlockInput = this.inputList[this.inputList.length - 2]
-    const emptyInputs = this.inputList.filter(isEmptyBlockInput)
-    if (emptyInputs.length !== 1) {
-      emptyInputs.forEach(input => {
-        input.connection.disconnect()
-        input.dispose()
-      })
-      lastDummyInput.dispose()
+    const newInputName = `ELEMENT${this.inputIndex++}`
+    this.appendValueInput(newInputName)
+      .appendField(",")
+      .inputType = createType("a")
+    this.moveInputBefore(newInputName, "CLOSE")
 
-      this.appendValueInput(`ELEMENT${this.inputList.length}`)
-        .appendField(",")
-        .inputType = createType("a")
-
-      this.appendDummyInput("")
-        .appendField("]")
-    }
+    this.inputList[0].removeField()
+    this.inputList[0].appendField("[")
   }
 }
 
@@ -194,7 +191,7 @@ Blockly.Blocks['list'] = {
     this.appendValueInput("ELEMENT")
       .appendField("[")
       .inputType = createType("a")
-    this.appendDummyInput("")
+    this.appendDummyInput("CLOSE")
       .appendField("]")
     this.setInputsInline(true)
     this.setOutput(true, null)
@@ -202,7 +199,41 @@ Blockly.Blocks['list'] = {
     this.setHelpUrl("")
     this.setOnChange(function (event) { onChangeList.bind(this)(event) })
     this.outputType = new ListType(createType("a"))
-  }
+  },
+
+  /**
+   * Create XML to represent the (non-editable) name and arguments.
+   * @return {!Element} XML storage element.
+   * @this Blockly.Block
+   */
+  mutationToDom: function () {
+    var container = document.createElement('mutation')
+    this.inputList.filter(isBlockInput).forEach(input => {
+      var parameter = document.createElement('arg')
+      parameter.setAttribute('name', input.name)
+      container.appendChild(parameter)
+    })
+    return container
+  },
+
+  /**
+   * Parse XML to restore the (non-editable) name and parameters.
+   * @param {!Element} xmlElement XML storage element.
+   * @this Blockly.Block
+   */
+  domToMutation: function (xmlElement) {
+    this.inputList.forEach(input => { this.removeInput(input.name) })
+
+    for (var i = 0, childNode; childNode = xmlElement.childNodes[i]; i++) {
+      if (childNode.nodeName.toLowerCase() == 'arg') {
+        const inputName = childNode.getAttribute('name')
+        this.appendValueInput(inputName)
+          .appendField("[")
+          .inputType = createType("a")
+        this.moveInputBefore(inputName, "CLOSE")
+      }
+    }
+  },
 }
 
 Blockly.Blocks["math_arithmetic"].onchange = function (event) {
