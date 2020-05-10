@@ -36,11 +36,13 @@ describe('Constraint Solving', () => {
   })
 
   it('function of parametric types to single type fails', () => {
-    const constraints = createType(["a", "a"]).eqConstraints(createType("Number"))
+    const inputType = createType(["a", "a"])
+    const blockType = createType("Number")
+    const constraints = inputType.eqConstraints(blockType)
 
     const result = solveConstraints({ constraints })
 
-    assertTypeError(result)
+    assertTypeError(result, typeError(inputType, blockType))
   })
 
   it('function of same parametric types to function of same single types works', () => {
@@ -148,19 +150,23 @@ describe('Constraint Solving', () => {
   })
 
   it('function of parametric types to single type fails', () => {
-    const constraints = createType([["a", "b"], "a"]).eqConstraints(createType("Number"))
+    const inputType = createType([["a", "b"], "a"])
+    const blockType = createType("Number")
+    const constraints = inputType.eqConstraints(blockType)
 
     const result = solveConstraints({ constraints })
-
-    assertTypeError(result)
+    
+    assertTypeError(result, typeError(inputType, blockType))
   })
 
   it('high order function of parametric types to non high order function of single types fails', () => {
-    const constraints = createType([["a", "b"], "a"]).eqConstraints(createType(["Number", "Number"]))
+    const inputType = createType([["a", "b"], "a"])
+    const blockType = createType(["Number", "Number"])
+    const constraints = inputType.eqConstraints(blockType)
 
     const result = solveConstraints({ constraints })
 
-    assertTypeError(result)
+    assertTypeError(result, typeError(createType(["a", "b"]), createType("Number")))
   })
 
   it('high order function of parametric types to function that receives a parametric type as parameter works', () => {

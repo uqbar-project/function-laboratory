@@ -73,4 +73,20 @@ class SimpleEqConstraint extends EqConstraint {
   }
 }
 
+class CompuseEqConstraint extends EqConstraint {
+  constructor(compuseType, otherType) {
+    super(compuseType, otherType)
+    this.compuseType = compuseType
+    this.otherType = otherType
+  }
+
+  solve() {
+    try {
+      return this.otherType.restrictToCompuse(this.compuseType)
+    } catch(e) {
+      return { error: e }
+    }
+  }
+}
+
 const typeError = (expectedType, currentType) => `Se esperaba ${expectedType.toString()} pero se obtuvo ${currentType.toString()}`

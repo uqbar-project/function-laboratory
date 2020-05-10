@@ -15,10 +15,6 @@ class Type {
     throw "Subclass responsibility"
   }
 
-  eqConstraintsForFunctionType(otherType) {
-    throw "Subclass responsibility"
-  }
-
   eqConstraintsForParametricType(otherType) {
     throw "Subclass responsibility"
   }
@@ -28,6 +24,10 @@ class Type {
   }
 
   restrictToSimple(type) {
+    throw "Subclass responsibility"
+  }
+
+  restrictToCompuse(type) {
     throw "Subclass responsibility"
   }
 
@@ -88,12 +88,14 @@ class FunctionType extends Type {
     throw typeError(type.toString(), this.toString())
   }
 
-  eqConstraints(otherType) {
-    return otherType.eqConstraintsForFunctionType(this)
+  restrictToCompuse(type) { //TODO: Mover a constraints
+    const result = solveConstraints({ constraints: type.inputType.eqConstraints(this.inputType).concat(type.outputType.eqConstraints(this.outputType)) })
+    if (result.error) throw result.error
+    return result.typeDictionary
   }
 
-  eqConstraintsForFunctionType(otherType) {
-    return otherType.inputType.eqConstraints(this.inputType).concat(otherType.outputType.eqConstraints(this.outputType))
+  eqConstraints(otherType) {
+    return [new CompuseEqConstraint(this, otherType)]
   }
 
   eqConstraintsForParametricType(otherType) {
@@ -141,12 +143,12 @@ class SingleType extends Type {
     throw typeError(type.toString(), this.toString())
   }
 
-  eqConstraints(otherType) {
-    return [new SimpleEqConstraint(this, otherType)]
+  restrictToCompuse(type) {
+    throw typeError(type, this)
   }
 
-  eqConstraintsForFunctionType(_otherType) {
-    return [new ConstraintError("Type Error")]
+  eqConstraints(otherType) {
+    return [new SimpleEqConstraint(this, otherType)]
   }
 
   eqConstraintsForParametricType(otherType) {
@@ -192,15 +194,15 @@ class ParametricType extends Type {
     return { [this.typeVariableName]: type }
   }
 
+  restrictToCompuse(type) {
+    return { [this.typeVariableName]: type }
+  }
+
   eqConstraints(otherType) {
     return otherType.eqConstraintsForParametricType(this)
   }
 
   eqConstraintsForParametricType(otherType) {
-    return [new EqConstraint(otherType, this)]
-  }
-
-  eqConstraintsForFunctionType(otherType) {
     return [new EqConstraint(otherType, this)]
   }
 
