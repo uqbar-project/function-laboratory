@@ -67,7 +67,7 @@ class SimpleEqConstraint extends EqConstraint {
   solve() {
     try {
       return this.otherType.restrictToSimple(this.simpleType)
-    } catch(e) {
+    } catch (e) {
       return { error: e }
     }
   }
@@ -83,9 +83,23 @@ class CompuseEqConstraint extends EqConstraint {
   solve() {
     try {
       return this.otherType.restrictToCompuse(this.compuseType)
-    } catch(e) {
+    } catch (e) {
       return { error: e }
     }
+  }
+}
+
+class ParametricEqConstraint extends EqConstraint {
+  constructor(parametricType, otherType) {
+    super(parametricType, otherType)
+    this.parametricType = parametricType
+    this.otherType = otherType
+  }
+
+  solve() {
+    if (this.a.isVarType() && this.b.includes(this.a) || this.b.isVarType() && this.b.includes(this.b))
+      return { error: "Impossible recursive type" }
+    return this.parametricType.restrict(this.otherType)
   }
 }
 

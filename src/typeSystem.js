@@ -15,10 +15,6 @@ class Type {
     throw "Subclass responsibility"
   }
 
-  eqConstraintsForParametricType(otherType) {
-    throw "Subclass responsibility"
-  }
-
   replacing(typeMap) {
     throw "Subclass responsibility"
   }
@@ -98,10 +94,6 @@ class FunctionType extends Type {
     return [new CompuseEqConstraint(this, otherType)]
   }
 
-  eqConstraintsForParametricType(otherType) {
-    return [new EqConstraint(otherType, this)]
-  }
-
   toStringAsInput() {
     return "(" + this.toString() + ")"
   }
@@ -151,10 +143,6 @@ class SingleType extends Type {
     return [new SimpleEqConstraint(this, otherType)]
   }
 
-  eqConstraintsForParametricType(otherType) {
-    return [new EqConstraint(otherType, this)]
-  }
-
   toString() {
     return this.typeName;
   }
@@ -191,19 +179,19 @@ class ParametricType extends Type {
   }
 
   restrictToSimple(type) {
-    return { [this.typeVariableName]: type }
+    return this.restrict(type)
   }
 
   restrictToCompuse(type) {
+    return this.restrict(type)
+  }
+
+  restrict(type) {
     return { [this.typeVariableName]: type }
   }
 
   eqConstraints(otherType) {
-    return otherType.eqConstraintsForParametricType(this)
-  }
-
-  eqConstraintsForParametricType(otherType) {
-    return [new EqConstraint(otherType, this)]
+    return [new ParametricEqConstraint(this, otherType)]
   }
 
   toString() {
