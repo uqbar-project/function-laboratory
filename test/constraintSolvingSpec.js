@@ -74,7 +74,7 @@ describe('Constraint Solving', () => {
 
     const result = solveConstraints({ constraints })
 
-    assertTypeError(result)
+    assertTypeError(result, typeError(Number, String))
   })
 
   it('function of different parametric types to function of those same parametric types swaped works', () => {
@@ -82,7 +82,7 @@ describe('Constraint Solving', () => {
 
     const result = solveConstraints({ constraints })
 
-    assertTypeVariables(result, { a: createType("b") })
+    assertTypeVariables(result, { a: createType("b"), b: createType("b") }) //TODO: Remove redundant
   })
 
   it('parametric type to function of single types works', () => {
@@ -146,7 +146,7 @@ describe('Constraint Solving', () => {
 
     const result = solveConstraints({ constraints })
 
-    assertTypeError(result)
+    assertTypeError(result, typeError(String, Number))
   })
 
   it('function of parametric types to single type fails', () => {

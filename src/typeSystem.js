@@ -3,10 +3,6 @@ class Type {
     throw "Subclass responsibility"
   }
 
-  isSameType(otherType) {
-    throw "Subclass responsibility"
-  }
-
   includes(parametricType) {
     throw "Subclass responsibility"
   }
@@ -23,12 +19,8 @@ class Type {
     throw "Subclass responsibility"
   }
 
-  restrictToCompuse(type) {
+  restrictToComposite(type) {
     throw "Subclass responsibility"
-  }
-
-  isVarType() {
-    return false
   }
 
   isFunctionType() {
@@ -63,13 +55,6 @@ class FunctionType extends Type {
     return this.inputType.allTypeVariableNamesUsed().concat(this.outputType.allTypeVariableNamesUsed())
   }
 
-  isSameType(otherType) {
-    return otherType.inputType &&
-      otherType.outputType &&
-      this.inputType.isSameType(otherType.inputType) &&
-      this.outputType.isSameType(otherType.outputType)
-  }
-
   includes(parametricType) {
     const typeVariableName = parametricType.typeVariableName
     return (this.inputType.typeVariableName == typeVariableName || this.outputType.typeVariableName == typeVariableName) ||
@@ -84,14 +69,15 @@ class FunctionType extends Type {
     throw typeError(type.toString(), this.toString())
   }
 
-  restrictToCompuse(type) { //TODO: Mover a constraints
-    const result = solveConstraints({ constraints: type.inputType.eqConstraints(this.inputType).concat(type.outputType.eqConstraints(this.outputType)) })
+  restrictToComposite(type) { //TODO: Mover a constraints
+    const constraints = type.inputType.eqConstraints(this.inputType).concat(type.outputType.eqConstraints(this.outputType))
+    const result = solveConstraints({ constraints })
     if (result.error) throw result.error
     return result.typeDictionary
   }
 
   eqConstraints(otherType) {
-    return [new CompuseEqConstraint(this, otherType)]
+    return [new CompositeEqConstraint(this, otherType)]
   }
 
   toStringAsInput() {
@@ -117,10 +103,6 @@ class SingleType extends Type {
     return []
   }
 
-  isSameType(otherType) {
-    return otherType.typeName == this.typeName
-  }
-
   includes(parametricType) {
     return false
   }
@@ -135,7 +117,7 @@ class SingleType extends Type {
     throw typeError(type.toString(), this.toString())
   }
 
-  restrictToCompuse(type) {
+  restrictToComposite(type) {
     throw typeError(type, this)
   }
 
@@ -158,16 +140,8 @@ class ParametricType extends Type {
     this.typeVariableName = typeVariableName;
   }
 
-  isVarType() {
-    return true
-  }
-
   allTypeVariableNamesUsed() {
     return [this.typeVariableName]
-  }
-
-  isSameType(otherType) {
-    return otherType.typeVariableName == this.typeVariableName
   }
 
   includes(parametricType) {
@@ -175,14 +149,14 @@ class ParametricType extends Type {
   }
 
   replacing(typeMap) {
-    return (typeMap[this.typeVariableName] && typeMap[this.typeVariableName].replacing(typeMap)) || this
+    return typeMap[this.typeVariableName] || this
   }
 
   restrictToSimple(type) {
     return this.restrict(type)
   }
 
-  restrictToCompuse(type) {
+  restrictToComposite(type) {
     return this.restrict(type)
   }
 
@@ -221,10 +195,6 @@ const createType = (typeName) => {
     }
   }
 }
-
-const isFunction = type => type.isFunctionType()
-
-const isVarType = type => type.isVarType()
 
 function createFunctionType(types) {
   return types.reduceRight((outputType, inputType) => new FunctionType(inputType, outputType))

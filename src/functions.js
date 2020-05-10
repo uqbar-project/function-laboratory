@@ -9,7 +9,7 @@ function onChangeFunction(event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)
   }
-  if (this.getParent() && isFunction(blockType(this))) {
+  if (this.getParent() && blockType(this).isFunctionType()) {
     this.setCollapsed(true)
   } else {
     this.setCollapsed(false)

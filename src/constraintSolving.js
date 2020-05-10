@@ -9,7 +9,7 @@ const solveConstraints = ({ constraints, typeDictionary = {} }) => {
 
   const typeDictionaryAfterReplacements = mapValues(type => type.replacing(constraintResult))(typeDictionary)
 
-  const newConstraints = restOfConstraints.map(constraint => constraint.replace(constraintResult))
+  const newConstraints = restOfConstraints.flatMap(constraint => constraint.replace(constraintResult))
 
   const newTypeDictionary = { ...typeDictionaryAfterReplacements, ...constraintResult }
 
@@ -33,23 +33,19 @@ class EqConstraint {
   }
 
   replace(typeDictionary) {
-    return new EqConstraint(this.a.replacing(typeDictionary), this.b.replacing(typeDictionary))
+    return this.a.replacing(typeDictionary).eqConstraints(this.b.replacing(typeDictionary))
   }
 
   solve() {
-    if (this.a.isSameType(this.b)) {
-      return {}
-    } else if (this.a.isVarType() && this.b.includes(this.a) || this.b.isVarType() && this.b.includes(this.b)) {
-      return { error: "Impossible recursive type" }
-    } else if (this.a.isVarType()) {
-      return { [this.a.typeVariableName]: this.b }
-    } else if (this.b.isVarType()) {
-      return { [this.b.typeVariableName]: this.a }
-    } else if (this.a.isFunctionType() && this.b.isFunctionType()) {
-      return solveConstraints({ constraints: this.a.eqConstraints(this.b) }).typeDictionary
-    } else {
-      return { error: "Type Error" }
+    try {
+      return this.doSolve()
+    } catch (e) {
+      return { error: e }
     }
+  }
+
+  doSolve() {
+    throw "Subclass responsibility"
   }
 
   toString() {
@@ -64,7 +60,7 @@ class SimpleEqConstraint extends EqConstraint {
     this.otherType = otherType
   }
 
-  solve() {
+  doSolve() {
     try {
       return this.otherType.restrictToSimple(this.simpleType)
     } catch (e) {
@@ -73,16 +69,16 @@ class SimpleEqConstraint extends EqConstraint {
   }
 }
 
-class CompuseEqConstraint extends EqConstraint {
-  constructor(compuseType, otherType) {
-    super(compuseType, otherType)
-    this.compuseType = compuseType
+class CompositeEqConstraint extends EqConstraint {
+  constructor(compositeType, otherType) {
+    super(compositeType, otherType)
+    this.compositeType = compositeType
     this.otherType = otherType
   }
 
-  solve() {
+  doSolve() {
     try {
-      return this.otherType.restrictToCompuse(this.compuseType)
+      return this.otherType.restrictToComposite(this.compositeType)
     } catch (e) {
       return { error: e }
     }
@@ -96,10 +92,14 @@ class ParametricEqConstraint extends EqConstraint {
     this.otherType = otherType
   }
 
-  solve() {
-    if (this.a.isVarType() && this.b.includes(this.a) || this.b.isVarType() && this.b.includes(this.b))
-      return { error: "Impossible recursive type" }
+  doSolve() {
+    this.validateRecursiveType()
     return this.parametricType.restrict(this.otherType)
+  }
+
+  validateRecursiveType() {
+    if (this.otherType.includes(this.parametricType))
+      throw "Impossible recursive type"
   }
 }
 
