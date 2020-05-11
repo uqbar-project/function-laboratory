@@ -19,6 +19,6 @@ const colorType = (block) => {
 const typeToColor = type => type.toColor(colorTypes)
 
 const colorShow = (block) => {
-  if (block.getParent()) return colorType(block.getParent())
+  if (block.getParent()) return colorShow(block.getParent())
   return colorType(block)
 }
