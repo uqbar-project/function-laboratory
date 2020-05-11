@@ -41,16 +41,10 @@ function setFunctionType(block, ...types) {
   block.outputType = outputType;
 }
 
-function buildFuctionBlock(name, functionType, fields = []) {
-
+function buildFuctionBlockWith(name, functionType, cb) {
   Blockly.Blocks[name] = {
     init: function () {
-      this.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
-      for (let index = 1; index < functionType.length - 1; index++) {
-        const inputName = fields[index] || ""
-        this.appendValueInput(`ARG${index}`).appendField(inputName)
-      }
-
+      cb(this)
       this.setInputsInline(true)
       this.setOutput(true)
       this.setTooltip("")
@@ -62,24 +56,21 @@ function buildFuctionBlock(name, functionType, fields = []) {
 
 }
 
-const buildInfixFuctionBlock = ([name, field], functionType) => {
-
-  Blockly.Blocks[name] = {
-    init: function () {
-      this.appendValueInput("LEFT")
-      this.appendValueInput("RIGHT")
-        .appendField(field)
-
-      this.setInputsInline(true)
-      this.setOutput(true)
-      this.setTooltip("")
-      this.setHelpUrl("")
-      this.setOnChange(onChangeFunction.bind(this))
-      setFunctionType(this, ...functionType)
+const buildFuctionBlock = (name, functionType, fields = []) =>
+  buildFuctionBlockWith(name, functionType, block => {
+    block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
+    for (let index = 1; index < functionType.length - 1; index++) {
+      const inputName = fields[index] || ""
+      block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-  }
+  })
 
-}
+const buildInfixFuctionBlock = ([name, field], functionType) =>
+  buildFuctionBlockWith(name, functionType, block => {
+    block.appendValueInput("LEFT")
+    block.appendValueInput("RIGHT")
+      .appendField(field)
+  })
 
 const newListType = (elementType) => new ListType(createType(elementType))
 
