@@ -205,7 +205,7 @@ class ParametricType extends Type {
 }
 
 const createType = (typeName) => {
-  if (Type.isPrototypeOf(typeName.constructor)) return type
+  if (Type.isPrototypeOf(typeName.constructor)) return typeName
   if (Array.isArray(typeName)) {
     if (typeName.length > 1) {
       const [inputTypeName, ...returnTypeNames] = typeName

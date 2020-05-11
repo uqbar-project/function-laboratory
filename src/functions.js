@@ -81,19 +81,27 @@ const buildInfixFuctionBlock = ([name, field], functionType) => {
 
 }
 
+const newListType = (elementType) => new ListType(createType(elementType))
+
 buildFuctionBlock("even", ["Number", "Boolean"])
 buildFuctionBlock("not", ["Boolean", "Boolean"])
-//TODO: List(Char)
-buildFuctionBlock("length", ["String", "Number"])
+buildFuctionBlock("length", ["String", "Number"])//TODO: List(Char)
 buildFuctionBlock("charAt", ["Number", "String", "String"])
 
 buildInfixFuctionBlock(["compare", ">"], ["a", "a", "Boolean"])//TODO: Selector
-buildInfixFuctionBlock(["at", "!!"], [new ListType(createType("a")), "Number", "a"])
 buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 
 buildFuctionBlock("id", ["a", "a"])
 buildFuctionBlock("composition", [["b", "c"], ["a", "b"], "a", "c"], ["", ".", "$"])
 
+buildInfixFuctionBlock(["at", "!!"], [newListType("a"), "Number", "a"])
+buildFuctionBlock("any", [["a", "Boolean"], newListType("a"), "Boolean"])
+buildFuctionBlock("all", [["a", "Boolean"], newListType("a"), "Boolean"])
+buildFuctionBlock("filter", [["a", "Boolean"], newListType("a"), newListType("a")])
+buildFuctionBlock("map", [["a", "b"], newListType("a"), newListType("b")])
+buildFuctionBlock("maximum", [newListType("a"), "a"])
+buildFuctionBlock("minimum", [newListType("a"), "a"])
+buildFuctionBlock("fold", [["a", "b", "a"], "a", newListType("b"), "a"])
 
 Blockly.Blocks['list'] = {
   init: function () {
