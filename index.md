@@ -20,6 +20,7 @@
   <block type="even"></block>
   <block type="not"></block>
   <block type="length"></block>
+  <block type="apply"></block>
   <block type="compare"></block>
   <block type="math_number"></block>
   <block type="math_arithmetic"></block>

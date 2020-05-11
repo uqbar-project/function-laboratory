@@ -205,20 +205,21 @@ class ParametricType extends Type {
 }
 
 const createType = (typeName) => {
+  if (Type.isPrototypeOf(typeName.constructor)) return type
   if (Array.isArray(typeName)) {
     if (typeName.length > 1) {
-      const [inputTypeName, ...returnTypeNames] = typeName;
-      const outputType = createType(returnTypeNames);
-      const inputType = createType(inputTypeName);
-      return new FunctionType(inputType, outputType);
+      const [inputTypeName, ...returnTypeNames] = typeName
+      const outputType = createType(returnTypeNames)
+      const inputType = createType(inputTypeName)
+      return new FunctionType(inputType, outputType)
     } else {
-      return createType(typeName[0]);
+      return createType(typeName[0])
     }
   } else {
     if (typeName[0] == typeName[0].toLowerCase()) {
       return new ParametricType(typeName)
     } else {
-      return new SingleType(typeName);
+      return new SingleType(typeName)
     }
   }
 }

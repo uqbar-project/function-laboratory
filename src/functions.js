@@ -41,143 +41,59 @@ function setFunctionType(block, ...types) {
   block.outputType = outputType;
 }
 
-Blockly.Blocks['even'] = {
-  init: function () {
-    this.appendValueInput("NAME")
-      .appendField("even");
-    this.setInputsInline(true);
-    this.setOutput(true);
-    this.setColour(230);
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
+function buildFuctionBlock(name, functionType, fields = []) {
 
-    setFunctionType(this, "Number", "Boolean")
+  Blockly.Blocks[name] = {
+    init: function () {
+      this.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
+      for (let index = 1; index < functionType.length - 1; index++) {
+        const inputName = fields[index] || ""
+        this.appendValueInput(`ARG${index}`).appendField(inputName)
+      }
+
+      this.setInputsInline(true)
+      this.setOutput(true)
+      this.setTooltip("")
+      this.setHelpUrl("")
+      this.setOnChange(onChangeFunction.bind(this))
+      setFunctionType(this, ...functionType)
+    }
   }
+
 }
 
-Blockly.Blocks['not'] = {
-  init: function () {
-    this.appendValueInput("NAME")
-      .appendField("not");
-    this.setInputsInline(true);
-    this.setOutput(true);
-    this.setColour(230);
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
+const buildInfixFuctionBlock = ([name, field], functionType) => {
 
-    setFunctionType(this, "Boolean", "Boolean")
+  Blockly.Blocks[name] = {
+    init: function () {
+      this.appendValueInput("LEFT")
+      this.appendValueInput("RIGHT")
+        .appendField(field)
+
+      this.setInputsInline(true)
+      this.setOutput(true)
+      this.setTooltip("")
+      this.setHelpUrl("")
+      this.setOnChange(onChangeFunction.bind(this))
+      setFunctionType(this, ...functionType)
+    }
   }
+
 }
 
-Blockly.Blocks['length'] = {
-  init: function () {
-    this.appendValueInput("NAME")
-      .appendField("length");
-    this.setInputsInline(true);
-    this.setOutput(true);
-    this.setColour(230);
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
+buildFuctionBlock("even", ["Number", "Boolean"])
+buildFuctionBlock("not", ["Boolean", "Boolean"])
+//TODO: List(Char)
+buildFuctionBlock("length", ["String", "Number"])
+buildFuctionBlock("charAt", ["Number", "String", "String"])
 
-    setFunctionType(this, "String", "Number")
-  }
-}
+buildInfixFuctionBlock(["compare", ">"], ["a", "a", "Boolean"])//TODO: Selector
+buildInfixFuctionBlock(["at", "!!"], [new ListType(createType("a")), "Number", "a"])
+buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 
-Blockly.Blocks['charAt'] = {
-  init: function () {
-    this.appendValueInput("NAME")
-      .appendField("charAt");
+buildFuctionBlock("id", ["a", "a"])
+buildFuctionBlock("composition", [["b", "c"], ["a", "b"], "a", "c"], ["", ".", "$"])
 
-    this.appendValueInput("NAME")
-
-    this.setInputsInline(true);
-    this.setOutput(true);
-    this.setColour(230);
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
-
-    setFunctionType(this, "Number", "String", "String")
-  }
-}
-
-Blockly.Blocks['compare'] = {
-  init: function () {
-    this.appendValueInput("LEFT")
-
-    this.appendValueInput("RIGHT")
-      .appendField(">");//TODO: Selector
-
-    this.setInputsInline(true);
-    this.setOutput(true);
-    this.setColour(230);
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
-
-    //Parametric Type
-    setFunctionType(this, "a", "a", "Boolean")
-  }
-}
-
-Blockly.Blocks['id'] = {
-  init: function () {
-    this.appendValueInput("PARAM")
-      .appendField("id");
-
-    this.setInputsInline(true);
-    this.setOutput(true);
-    this.setColour(230);
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
-
-    //Parametric Type
-    setFunctionType(this, "a", "a")
-  }
-}
-
-Blockly.Blocks['composition'] = {
-  init: function () {
-    this.appendValueInput("F2")
-      .setCheck(null);
-    this.appendValueInput("F1")
-      .setCheck(null)
-      .appendField(".");
-    this.appendValueInput("VALUE")
-      .setCheck(null)
-      .appendField("$");
-    this.setInputsInline(true);
-    this.setOutput(true, null);
-    this.setColour('gray')
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
-
-    setFunctionType(this, ["b", "c"], ["a", "b"], "a", "c")
-  }
-};
-
-Blockly.Blocks['apply'] = {
-  init: function () {
-    this.appendValueInput("function")
-      .setCheck(null)
-    this.appendValueInput("VALUE")
-      .setCheck(null)
-      .appendField("$");
-    this.setInputsInline(true);
-    this.setOutput(true, null);
-    this.setColour('gray')
-    this.setTooltip("");
-    this.setHelpUrl("");
-    this.setOnChange(onChangeFunction.bind(this))
-
-    setFunctionType(this, ["a", "b"], "a", "b")
-  }
-}
 
 Blockly.Blocks['list'] = {
   init: function () {
