@@ -19,17 +19,10 @@ function onChangeFunction(event) {
 
 function onChangeList(event) {
   onChangeValue.bind(this)(event)
-  if (this.inputIndex === undefined) { this.inputIndex = 1 }
   if (this.workspace.isDragging()) {
     return;  // Don't change state at the start of a drag.
   }
-  const emptyInputs = this.inputList.filter(isEmptyBlockInput)
-  if (emptyInputs.length !== 1 || !isEmptyBlockInput(last(emptyInputs))) {
-    emptyInputs.forEach(removeInput(this))
-    const newInputName = `ELEMENT${this.inputIndex++}`
-    appendNewInputList(this, newInputName)
-  }
-  renameField(this.inputList[0], "[")
+  organizeList(this)
 }
 
 
@@ -53,7 +46,6 @@ function buildFuctionBlockWith(name, functionType, cb) {
       setFunctionType(this, ...functionType)
     }
   }
-
 }
 
 const buildFuctionBlock = (name, functionType, fields = []) =>
@@ -107,6 +99,7 @@ Blockly.Blocks['list'] = {
     this.setHelpUrl("")
     this.setOnChange(function (event) { onChangeList.bind(this)(event) })
     this.outputType = new ListType(createType("a"))
+    this.inputIndex = 1
   },
 
   /**
@@ -141,12 +134,6 @@ Blockly.Blocks['list'] = {
   },
 }
 
-const appendNewInputList = (block, inputName) => {
-  block.appendValueInput(inputName)
-    .appendField(",")
-    .inputType = createType("a")
-  block.moveInputBefore(inputName, "CLOSE")
-}
 
 Blockly.Blocks["math_arithmetic"].onchange = function (event) {
   setFunctionType(this, "Number", "Number", "Number")

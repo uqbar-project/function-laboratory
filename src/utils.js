@@ -17,6 +17,28 @@ const renameField = (input, name) => {
   input.removeField()
   input.appendField(name)
 }
+
+const isOrganizedList = block =>
+  block.inputList.filter(isEmptyBlockInput).length === 1 &&
+  isEmptyBlockInput(last(block.inputList.filter(isBlockInput)))
+
+const organizeList = block => {
+  if (!isOrganizedList(block)) {
+    block.inputList
+      .filter(isEmptyBlockInput)
+      .forEach(removeInput(block))
+    const newInputName = `ELEMENT${block.inputIndex++}`
+    appendNewInputList(block, newInputName)
+  }
+}
+
+const appendNewInputList = (block, inputName) => {
+  block.appendValueInput(inputName)
+    .appendField(",")
+    .inputType = createType("a")
+  block.moveInputBefore(inputName, "CLOSE")
+  renameField(block.inputList[0], "[")
+}
 // Blockly
 
 // Iterables
