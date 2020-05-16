@@ -40,10 +40,10 @@ function buildFuctionBlockWith(name, functionType, cb) {
       cb(this)
       this.setInputsInline(true)
       this.setOutput(true)
-      this.setTooltip("")
-      this.setHelpUrl("")
       this.setOnChange(onChangeFunction.bind(this))
       setFunctionType(this, ...functionType)
+      this.setTooltip(blockType(this).toString())
+      this.setHelpUrl("")
     }
   }
 }
