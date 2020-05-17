@@ -46,25 +46,7 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setHelpUrl("")
     },
     reduce() {
-      let newBlock = null
-      if(this.type == 'even') {
-        const evenResult = this.getChildren()[0].getFieldValue("NUM") % 2 == 0
-        newBlock = this.workspace.newBlock("logic_boolean")
-        newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
-      } else if (this.type == 'not') {
-        const notResult = this.getChildren()[0].getFieldValue("BOOL") == "TRUE"
-        newBlock = this.workspace.newBlock("logic_boolean")
-        newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
-      } else if (this.type == 'id') {
-        const xmlBlock = Blockly.Xml.blockToDom(this.getChildren()[0])
-        const copiedBlock = Blockly.Xml.domToBlock(xmlBlock, this.workspace)
-        newBlock = copiedBlock
-      } else {
-        const lengthResult = this.getChildren()[0].getFieldValue("TEXT").length
-        newBlock = this.workspace.newBlock("math_number")
-        newBlock.setFieldValue(lengthResult, "NUM")
-      }
-      reduceBlock(this)(newBlock)
+      reduceBlock(this)(this.getResultBlock())
     },
     generateContextMenu: function() {
       const even = this
@@ -78,13 +60,14 @@ function buildFuctionBlockWith(name, functionType, cb) {
   }
 }
 
-const buildFuctionBlock = (name, functionType, fields = []) =>
-  buildFuctionBlockWith(name, functionType, block => {
+const buildFuctionBlock = ({name, type, fields = [], getResultBlock = function() { return this }}) =>
+  buildFuctionBlockWith(name, type, block => {
     block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
-    for (let index = 1; index < functionType.length - 1; index++) {
+    for (let index = 1; index < type.length - 1; index++) {
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
+    block.getResultBlock = getResultBlock
   })
 
 const buildInfixFuctionBlock = ([name, field], functionType) =>
@@ -129,25 +112,86 @@ const replace = oldBlock => newBlock => {
 
 const newListType = (elementType) => new ListType(createType(elementType))
 
-buildFuctionBlock("even", ["Number", "Boolean"])
-buildFuctionBlock("not", ["Boolean", "Boolean"])
-buildFuctionBlock("length", ["String", "Number"])//TODO: List(Char)
-buildFuctionBlock("charAt", ["Number", "String", "String"])
+buildFuctionBlock({
+  name: "even",
+  type: ["Number", "Boolean"],
+  getResultBlock: function() {
+    const evenResult = this.getChildren()[0].getFieldValue("NUM") % 2 == 0
+    newBlock = this.workspace.newBlock("logic_boolean")
+    newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
+    return newBlock
+}})
+buildFuctionBlock({
+  name: "not",
+  type: ["Boolean", "Boolean"],
+  getResultBlock: function() {
+    const notResult = this.getChildren()[0].getFieldValue("BOOL") == "TRUE"
+    newBlock = this.workspace.newBlock("logic_boolean")
+    newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
+    return newBlock
+}})
+buildFuctionBlock({
+  name: "length",
+  type: ["String", "Number"],
+  getResultBlock: function() {
+    const lengthResult = this.getChildren()[0].getFieldValue("TEXT").length
+    newBlock = this.workspace.newBlock("math_number")
+    newBlock.setFieldValue(lengthResult, "NUM")
+    return newBlock
+}})//TODO: List(Char)
+buildFuctionBlock({
+  name: "charAt",
+  type: ["Number", "String", "String"]
+})
 
 buildInfixFuctionBlock(["compare", ">"], ["a", "a", "Boolean"])//TODO: Selector
 buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 
-buildFuctionBlock("id", ["a", "a"])
-buildFuctionBlock("composition", [["b", "c"], ["a", "b"], "a", "c"], ["", ".", "$"])
+buildFuctionBlock({
+  name: "id",
+  type: ["a", "a"],
+  getResultBlock: function() {
+    const xmlBlock = Blockly.Xml.blockToDom(this.getChildren()[0])
+    const copiedBlock = Blockly.Xml.domToBlock(xmlBlock, this.workspace)
+    return copiedBlock
+} })
+buildFuctionBlock({
+  name: "composition",
+  type: [["b", "c"], ["a", "b"], "a", "c"],
+  fields: ["", ".", "$"]
+})
 
 buildInfixFuctionBlock(["at", "!!"], [newListType("a"), "Number", "a"])
-buildFuctionBlock("any", [["a", "Boolean"], newListType("a"), "Boolean"])
-buildFuctionBlock("all", [["a", "Boolean"], newListType("a"), "Boolean"])
-buildFuctionBlock("filter", [["a", "Boolean"], newListType("a"), newListType("a")])
-buildFuctionBlock("map", [["a", "b"], newListType("a"), newListType("b")])
-buildFuctionBlock("maximum", [newListType("a"), "a"])
-buildFuctionBlock("minimum", [newListType("a"), "a"])
-buildFuctionBlock("fold", [["a", "b", "a"], "a", newListType("b"), "a"])
+buildFuctionBlock({
+  name: "any",
+  type: [["a", "Boolean"], newListType("a"), "Boolean"]
+})
+buildFuctionBlock({
+  name: "all",
+  type: [["a", "Boolean"], newListType("a"), "Boolean"]
+})
+buildFuctionBlock({
+  name: "filter",
+  type: [["a", "Boolean"],
+  newListType("a"),
+  newListType("a")]
+})
+buildFuctionBlock({
+  name: "map",
+  type: [["a", "b"], newListType("a"), newListType("b")]
+})
+buildFuctionBlock({
+  name: "maximum",
+  type: [newListType("a"), "a"]
+})
+buildFuctionBlock({
+  name: "minimum",
+  type: [newListType("a"), "a"]
+})
+buildFuctionBlock({
+  name: "fold",
+  type: [["a", "b", "a"], "a", newListType("b"), "a"]
+})
 
 Blockly.Blocks['list'] = {
   init: function () {
