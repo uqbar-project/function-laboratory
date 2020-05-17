@@ -48,17 +48,21 @@ function buildFuctionBlockWith(name, functionType, cb) {
     reduce() {
       let newBlock = null
       if(this.type == 'even') {
-        newBlock = this.workspace.newBlock("logic_boolean")
         const evenResult = this.getChildren()[0].getFieldValue("NUM") % 2 == 0
+        newBlock = this.workspace.newBlock("logic_boolean")
         newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
       } else if (this.type == 'not') {
-        newBlock = this.workspace.newBlock("logic_boolean")
         const notResult = this.getChildren()[0].getFieldValue("BOOL") == "TRUE"
+        newBlock = this.workspace.newBlock("logic_boolean")
         newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
-      } else {
+      } else if (this.type == 'id') {
         const xmlBlock = Blockly.Xml.blockToDom(this.getChildren()[0])
         const copiedBlock = Blockly.Xml.domToBlock(xmlBlock, this.workspace)
         newBlock = copiedBlock
+      } else {
+        const lengthResult = this.getChildren()[0].getFieldValue("TEXT").length
+        newBlock = this.workspace.newBlock("math_number")
+        newBlock.setFieldValue(lengthResult, "NUM")
       }
       reduceBlock(this)(newBlock)
     },

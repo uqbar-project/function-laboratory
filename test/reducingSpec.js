@@ -103,5 +103,19 @@ describe('Reducing expressions', () => {
         })
       })
     })
+
+    describe('length', () => {
+      onWorkspace('when it is applied an empty string it reduces to 0', workspace => {
+        const length = workspace.newBlock('length')
+        const emptyString = workspace.newBlock('text')
+        connect(length, emptyString)
+
+        length.reduce()
+
+        assertReplacedByBlockThatSatisfies(workspace, length, (newBlock) => {
+          return newBlock.type == 'math_number' && newBlock.getFieldValue("NUM") == 0
+        })
+      })
+    })
   })
 })
