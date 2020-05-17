@@ -49,13 +49,11 @@ function buildFuctionBlockWith(name, functionType, cb) {
       reduceBlock(this)(this.getResultBlock())
     },
     generateContextMenu: function() {
-      const even = this
-      const reduceOption = {
+      return [{
         text: "Reducir",
-        callback: even.reduce.bind(even),
+        callback: this.reduce.bind(this),
         enabled: !blockType(this).isFunctionType(),
-      }
-      return [reduceOption].concat(this.__proto__.generateContextMenu.bind(this)())
+      }, ...this.__proto__.generateContextMenu.bind(this)()]
     }
   }
 }
@@ -97,7 +95,7 @@ const reduceBlock = expandedBlock => reducedBlock => {
         replace(reducedBlock)(restoredOldBlock)
       },
       enabled: true
-    }].concat(reducedBlock.__proto__.generateContextMenu.bind(this)())
+    }, ...reducedBlock.__proto__.generateContextMenu.bind(this)()]
   }
 
   replace(expandedBlock)(reducedBlock)
