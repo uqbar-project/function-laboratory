@@ -1,3 +1,9 @@
+const errorReporter = {
+  report: function(error) {
+    alert(error)
+  }
+}
+
 function onChangeValue(event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)
@@ -46,7 +52,12 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setHelpUrl("")
     },
     reduce() {
-      reduceBlock(this)(this.getResultBlock())
+      const result = this.getResultBlock()
+      if(result.error) {
+        errorReporter.report(result.error)
+      } else {
+        reduceBlock(this)(result.block) 
+      }
     },
     generateContextMenu: function() {
       return [{
@@ -117,7 +128,7 @@ buildFuctionBlock({
     const evenResult = this.getChildren()[0].getFieldValue("NUM") % 2 == 0
     newBlock = this.workspace.newBlock("logic_boolean")
     newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
-    return newBlock
+    return { block: newBlock }
 }})
 buildFuctionBlock({
   name: "not",
@@ -126,7 +137,7 @@ buildFuctionBlock({
     const notResult = this.getChildren()[0].getFieldValue("BOOL") == "TRUE"
     newBlock = this.workspace.newBlock("logic_boolean")
     newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
-    return newBlock
+    return { block: newBlock }
 }})
 buildFuctionBlock({
   name: "length",
@@ -135,11 +146,23 @@ buildFuctionBlock({
     const lengthResult = this.getChildren()[0].getFieldValue("TEXT").length
     newBlock = this.workspace.newBlock("math_number")
     newBlock.setFieldValue(lengthResult, "NUM")
-    return newBlock
+    return { block: newBlock }
 }})//TODO: List(Char)
 buildFuctionBlock({
   name: "charAt",
-  type: ["Number", "String", "String"]
+  type: ["Number", "String", "String"],
+  getResultBlock: function() {
+    const position = this.getInput("ARG0").connection.targetBlock().getFieldValue("NUM")
+    const string = this.getInput("ARG1").connection.targetBlock().getFieldValue("TEXT")
+    const charAtResult = string[position]
+    if(charAtResult != null) {
+      newBlock = this.workspace.newBlock("text")
+      newBlock.setFieldValue(charAtResult, "TEXT")
+      return { block: newBlock }
+    } else {
+      return ({ error: "Out of bounds position"})
+    }
+  }
 })
 
 buildInfixFuctionBlock(["compare", ">"], ["a", "a", "Boolean"])//TODO: Selector
@@ -151,7 +174,7 @@ buildFuctionBlock({
   getResultBlock: function() {
     const xmlBlock = Blockly.Xml.blockToDom(this.getChildren()[0])
     const copiedBlock = Blockly.Xml.domToBlock(xmlBlock, this.workspace)
-    return copiedBlock
+    return { block: copiedBlock }
 } })
 buildFuctionBlock({
   name: "composition",

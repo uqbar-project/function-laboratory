@@ -129,5 +129,35 @@ describe('Reducing expressions', () => {
         })
       })
     })
+
+    describe("charAt", () => {
+      onWorkspace("when it is passed a valid position of an string and a string, it returns the character at that position", workspace => {
+        const charAt = workspace.newBlock('charAt')
+        const hello = newBlockWithFields(workspace, 'text', {TEXT:"Hello"})
+        const zero = newBlockWithFields(workspace, 'math_number', {NUM:0})
+        connect(charAt, zero, 0)
+        connect(charAt, hello, 1)
+
+        charAt.reduce()
+
+        assertReplacedByBlockThatSatisfies(workspace, charAt, newBlock => {
+          return newBlock.type == 'text' && newBlock.getFieldValue("TEXT") == "H"
+        })
+      })
+
+      onWorkspace("when it is passed an invalid position of an string and a string, it fails without reducing anything", workspace => {
+        const charAt = workspace.newBlock('charAt')
+        const hello = newBlockWithFields(workspace, 'text', {TEXT:"Hello"})
+        const six = newBlockWithFields(workspace, 'math_number', {NUM:6})
+        connect(charAt, six, 0)
+        connect(charAt, hello, 1)
+
+        charAt.reduce()
+
+        assert.exists(workspace.getBlockById(charAt.id))
+        assert.exists(workspace.getBlockById(hello.id))
+        assert.exists(workspace.getBlockById(six.id))
+      })
+    })
   })
 })
