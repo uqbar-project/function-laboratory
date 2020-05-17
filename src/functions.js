@@ -252,3 +252,6 @@ Blockly.Blocks["math_number"].outputType = createType("Number")
 
 Blockly.Blocks["text"].outputType = createType("String")
 Blockly.Blocks["text"].onchange = function (event) { onChangeValue.bind(this)(event) }
+
+Blockly.Blocks["logic_boolean"].outputType = createType("Boolean")
+Blockly.Blocks["logic_boolean"].onchange = function (event) { onChangeValue.bind(this)(event) }

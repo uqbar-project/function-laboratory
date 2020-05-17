@@ -116,6 +116,18 @@ describe('Reducing expressions', () => {
           return newBlock.type == 'math_number' && newBlock.getFieldValue("NUM") == 0
         })
       })
+
+      onWorkspace('when it is applied a string it reduces to the amount of characters in the string', workspace => {
+        const length = workspace.newBlock('length')
+        const helloWorld = newBlockWithFields(workspace, 'text', {TEXT:"Hello World!"})
+        connect(length, helloWorld)
+
+        length.reduce()
+
+        assertReplacedByBlockThatSatisfies(workspace, length, (newBlock) => {
+          return newBlock.type == 'math_number' && newBlock.getFieldValue("NUM") == 12
+        })
+      })
     })
   })
 })
