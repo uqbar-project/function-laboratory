@@ -63,11 +63,16 @@ class EstructuralType extends Type {
   }
 
   restrictToComposite(type) { //TODO: Mover a constraints
+    this.validateTypeRestriction(type)
     const constraints = Object.values(zipObjects(type.attributes, this.attributes)).flatMap(([type1, type2]) => type1.eqConstraints(type2))
-    if (constraints.length !== this.attributeValues().length) throw typeError(type, this)
     const result = solveConstraints({ constraints })
     if (result.error) throw result.error
     return result.typeDictionary
+  }
+
+  validateTypeRestriction(type) {
+    if (this.name != type.name) throw typeError(type, this)
+    if (!hasSameKeys(this.attributes, type.attributes)) throw typeError(type, this)
   }
 
   eqConstraints(otherType) {

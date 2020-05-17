@@ -56,6 +56,10 @@ const mapValues = (f) => (object) =>
 
 const intersect = (aList, anotherList) =>
   aList.filter(value => -1 !== anotherList.indexOf(value))
+
+const hasSameKeys = (obj1, obj2) =>
+  Object.keys(obj1).every(key1 => Object.keys(obj2).includes(key1)) &&
+  Object.keys(obj2).every(key2 => Object.keys(obj1).includes(key2))
 // Iterables
 
 // Others
