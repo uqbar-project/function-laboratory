@@ -14,16 +14,41 @@
 <div id="blocklyDiv" style="height: 500px; width: inherit;"></div>
 
 <xml id="toolbox" style="display: none">
-  <block type="composition"></block>
-  <block type="id"></block>
-  <block type="even"></block>
-  <block type="not"></block>
-  <block type="length"></block>
-  <block type="compare"></block>
-  <block type="math_number"></block>
-  <block type="math_arithmetic"></block>
-  <block type="charAt"></block>
-  <block type="text"></block>
+  <category name="Funciones">
+    <block type="composition"></block>
+    <category name="Matemáticas">
+      <block type="even"></block>
+      <block type="compare"></block>
+      <block type="math_arithmetic"></block>
+    </category>
+    <category name="Lógicas">
+      <block type="not"></block>
+    </category>
+    <category name="Strings">
+      <block type="length"></block>
+      <block type="charAt"></block>
+    </category>
+    <category name="Listas">
+      <block type="any"></block>
+      <block type="all"></block>
+      <block type="filter"></block>
+      <block type="map"></block>
+      <block type="maximum"></block>
+      <block type="minimum"></block>
+      <block type="fold"></block>
+      <block type="at"></block>
+    </category>
+    <category name="Otras">
+      <block type="id"></block>
+      <block type="apply"></block>
+    </category>
+  </category>
+  <category name="Literales">
+    <block type="math_number"></block>
+    <block type="text"></block>
+    <block type="list"></block>
+  </category>
+  
 </xml>
 
 <script>

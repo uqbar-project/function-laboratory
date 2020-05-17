@@ -22,21 +22,34 @@ const onWorkspace = (name, test) => {
   })
 }
 
-
-
 const connect = (block, parameterBlock, inputIndex = 0) => {
-  tryConnect(block, parameterBlock, inputIndex)
+  block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
   forceBlocklyEvents()
   forceBlocklyEvents() // ??
 }
 
-const tryConnect = (block, parameterBlock, inputIndex = 0) => {
-  try {
-    block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
-  } catch { }
+const disconnect = (block, inputIndex = 0) => {
+  block.inputList[inputIndex].connection.disconnect()
+  forceBlocklyEvents()
+  forceBlocklyEvents() // ??
 }
 
+
 // This forces synchronous onchange() calls.
-function forceBlocklyEvents() {
-  Blockly.Events.fireNow_()
+const forceBlocklyEvents = () => Blockly.Events.fireNow_()
+
+
+
+// Assertions
+const assertConnection = (parentBlock, block) => {
+  assert.include(parentBlock.getChildren().map(({ id }) => id), block.id)
 }
+
+const assertRejectedConnection = (parentBlock, block) => {
+  assert.notInclude(parentBlock.getChildren().map(({ id }) => id), block.id)
+}
+
+const assertColor = (block, color) => {
+  assert.equal(colorShow(block), color)
+}
+// Assertions

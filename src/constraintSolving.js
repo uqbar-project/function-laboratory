@@ -1,19 +1,19 @@
-const solveConstraints = ({ constraints, typeDictionary = {}}) => {
+const solveConstraints = ({ constraints, typeDictionary = {} }) => {
   const [constraint, ...restOfConstraints] = constraints
 
-  if(constraints.length == 0) { return { constraints, typeDictionary } }
+  if (constraints.length == 0) { return { constraints, typeDictionary } }
 
   const constraintResult = constraint.solve()
-  
-  if(constraintResult.error) { return constraintResult }
+
+  if (constraintResult.error) { return constraintResult }
 
   const typeDictionaryAfterReplacements = mapValues(type => type.replacing(constraintResult))(typeDictionary)
 
-  const newConstraints = restOfConstraints.map(constraint => constraint.replace(constraintResult))
+  const newConstraints = restOfConstraints.flatMap(constraint => constraint.replace(constraintResult))
 
-  const newTypeDictionary = {...typeDictionaryAfterReplacements, ...constraintResult}
+  const newTypeDictionary = { ...typeDictionaryAfterReplacements, ...constraintResult }
 
-  return solveConstraints({constraints: newConstraints, typeDictionary: newTypeDictionary})
+  return solveConstraints({ constraints: newConstraints, typeDictionary: newTypeDictionary })
 }
 
 class ConstraintError {
@@ -33,26 +33,74 @@ class EqConstraint {
   }
 
   replace(typeDictionary) {
-    return new EqConstraint(this.a.replacing(typeDictionary), this.b.replacing(typeDictionary))
+    return this.a.replacing(typeDictionary).eqConstraints(this.b.replacing(typeDictionary))
   }
 
   solve() {
-    if(this.a.isSameType(this.b)) {
-      return {}
-    } else if (this.a.isVarType() && this.b.includes(this.a) || this.b.isVarType() && this.b.includes(this.b)) {
-      return { error: "Impossible recursive type" }
-    } else if (this.a.isVarType()) {
-      return { [this.a.typeVariableName]: this.b }
-    } else if (this.b.isVarType()) {
-      return { [this.b.typeVariableName]: this.a }
-    } else if (this.a.isFunctionType() && this.b.isFunctionType()) {
-      return solveConstraints({constraints: this.a.eqConstraints(this.b)}).typeDictionary
-    } else {
-      return { error: "Type Error" }
+    try {
+      return this.doSolve()
+    } catch (e) {
+      return { error: e }
     }
+  }
+
+  doSolve() {
+    throw "Subclass responsibility"
   }
 
   toString() {
     return this.a.toString() + " ~ " + this.b.toString()
   }
 }
+
+class SimpleEqConstraint extends EqConstraint {
+  constructor(simpleType, otherType) {
+    super(simpleType, otherType)
+    this.simpleType = simpleType
+    this.otherType = otherType
+  }
+
+  doSolve() {
+    try {
+      return this.otherType.restrictToSimple(this.simpleType)
+    } catch (e) {
+      return { error: e }
+    }
+  }
+}
+
+class CompositeEqConstraint extends EqConstraint {
+  constructor(compositeType, otherType) {
+    super(compositeType, otherType)
+    this.compositeType = compositeType
+    this.otherType = otherType
+  }
+
+  doSolve() {
+    try {
+      return this.otherType.restrictToComposite(this.compositeType)
+    } catch (e) {
+      return { error: e }
+    }
+  }
+}
+
+class ParametricEqConstraint extends EqConstraint {
+  constructor(parametricType, otherType) {
+    super(parametricType, otherType)
+    this.parametricType = parametricType
+    this.otherType = otherType
+  }
+
+  doSolve() {
+    this.validateRecursiveType()
+    return this.parametricType.restrict(this.otherType)
+  }
+
+  validateRecursiveType() {
+    if (this.otherType.includes(this.parametricType))
+      throw "Impossible recursive type"
+  }
+}
+
+const typeError = (expectedType, currentType) => `Se esperaba ${expectedType.toString()} pero se obtuvo ${currentType.toString()}`
