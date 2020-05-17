@@ -89,5 +89,19 @@ describe('Reducing expressions', () => {
         })
       })
     })
+
+    describe('id', () => {
+      onWorkspace('when it is applied any paramter it reduces to that parameter', workspace => {
+        const id = workspace.newBlock('id')
+        const zero = newBlockWithFields(workspace, 'math_number', {NUM:0})
+        connect(id, zero)
+
+        id.reduce()
+
+        assertReplacedByBlockThatSatisfies(workspace, id, (newBlock) => {
+          return newBlock.type == 'math_number' && newBlock.getFieldValue("NUM") == 0
+        })
+      })
+    })
   })
 })

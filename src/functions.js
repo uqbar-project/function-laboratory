@@ -51,10 +51,14 @@ function buildFuctionBlockWith(name, functionType, cb) {
         newBlock = this.workspace.newBlock("logic_boolean")
         const evenResult = this.getChildren()[0].getFieldValue("NUM") % 2 == 0
         newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
-      } else {
+      } else if (this.type == 'not') {
         newBlock = this.workspace.newBlock("logic_boolean")
         const notResult = this.getChildren()[0].getFieldValue("BOOL") == "TRUE"
         newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
+      } else {
+        const xmlBlock = Blockly.Xml.blockToDom(this.getChildren()[0])
+        const copiedBlock = Blockly.Xml.domToBlock(xmlBlock, this.workspace)
+        newBlock = copiedBlock
       }
       reduceBlock(this)(newBlock)
     },
