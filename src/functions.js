@@ -52,7 +52,7 @@ function buildFuctionBlockWith(name, functionType, cb) {
       return [{
         text: "Reducir",
         callback: this.reduce.bind(this),
-        enabled: !blockType(this).isFunctionType(),
+        enabled: !blockType(this).isFunctionType() && this.getResultBlock,
       }, ...this.__proto__.generateContextMenu.bind(this)()]
     }
   }
