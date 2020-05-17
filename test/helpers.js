@@ -53,3 +53,13 @@ const assertColor = (block, color) => {
   assert.equal(colorShow(block), color)
 }
 // Assertions
+
+// Block creation
+
+const newBlockWithFields = (workspace, type, fields = {}) => {
+  const newBlock = workspace.newBlock(type)
+  Object.entries(fields).forEach(([fieldName, value]) => {
+    newBlock.setFieldValue(value, fieldName);
+  });
+  return newBlock
+}

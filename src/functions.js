@@ -44,6 +44,28 @@ function buildFuctionBlockWith(name, functionType, cb) {
       setFunctionType(this, ...functionType)
       this.setTooltip(blockType(this).toString())
       this.setHelpUrl("")
+    },
+    reduce() {
+      let newBlock = null
+      if(this.type == 'even') {
+        newBlock = this.workspace.newBlock("logic_boolean")
+        const evenResult = this.getChildren()[0].getFieldValue("NUM") % 2 == 0
+        newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
+      } else {
+        newBlock = this.workspace.newBlock("logic_boolean")
+        const notResult = this.getChildren()[0].getFieldValue("BOOL") == "TRUE"
+        newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
+      }
+      reduceBlock(this)(newBlock)
+    },
+    generateContextMenu: function() {
+      const even = this
+      const reduceOption = {
+        text: "Reducir",
+        callback: even.reduce.bind(even),
+        enabled: !blockType(this).isFunctionType(),
+      }
+      return [reduceOption].concat(this.__proto__.generateContextMenu.bind(this)())
     }
   }
 }
@@ -63,6 +85,39 @@ const buildInfixFuctionBlock = ([name, field], functionType) =>
     block.appendValueInput("RIGHT")
       .appendField(field)
   })
+
+function decorateInit(block, initExtension) {
+  const oldInit = block.init
+  function newInit() {
+    oldInit.bind(this)();
+    initExtension.bind(this)();
+  }
+  block.init = newInit
+}
+
+const reduceBlock = expandedBlock => reducedBlock => {
+  reducedBlock.setEditable(false)
+  expandedBlockAsXml = Blockly.Xml.blockToDom(expandedBlock)
+  reducedBlock.generateContextMenu = function () {
+    return [{
+      text: "Expandir",
+      callback: function() {
+        const restoredOldBlock = Blockly.Xml.domToBlock(expandedBlockAsXml, reducedBlock.workspace)
+        replace(reducedBlock)(restoredOldBlock)
+      },
+      enabled: true
+    }].concat(reducedBlock.__proto__.generateContextMenu.bind(this)())
+  }
+
+  replace(expandedBlock)(reducedBlock)
+}
+
+const replace = oldBlock => newBlock => {
+  newBlock.initSvg()
+  newBlock.moveTo(oldBlock.getRelativeToSurfaceXY())
+  oldBlock.dispose()
+  newBlock.render()
+}
 
 const newListType = (elementType) => new ListType(createType(elementType))
 
