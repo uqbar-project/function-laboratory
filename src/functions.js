@@ -130,30 +130,24 @@ buildFuctionBlock({
   name: "even",
   type: ["Number", "Boolean"],
   getResultBlock: function () {
-    const evenResult = argFieldValue(this)("NUM") % 2 == 0
-    newBlock = this.workspace.newBlock("logic_boolean")
-    newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
-    return { block: newBlock }
+    const result = argFieldValue(this)("NUM") % 2 == 0
+    return { block: newBoolean(this.workspace, result) }
   }
 })
 buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
   getResultBlock: function () {
-    const notResult = argFieldValue(this)("BOOL") == "TRUE"
-    newBlock = this.workspace.newBlock("logic_boolean")
-    newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
-    return { block: newBlock }
+    const result = argFieldValue(this)("BOOL") == "FALSE"
+    return { block: newBoolean(this.workspace, result) }
   }
 })
 buildFuctionBlock({
   name: "length",
   type: ["String", "Number"],
   getResultBlock: function () {
-    const lengthResult = argFieldValue(this)("TEXT").length
-    newBlock = this.workspace.newBlock("math_number")
-    newBlock.setFieldValue(lengthResult, "NUM")
-    return { block: newBlock }
+    const result = argFieldValue(this)("TEXT").length
+    return { block: newNumber(this.workspace, result) }
   }
 })//TODO: List(Char)
 buildFuctionBlock({
@@ -162,11 +156,9 @@ buildFuctionBlock({
   getResultBlock: function () {
     const position = argFieldValue(this, 0)("NUM")
     const string = argFieldValue(this, 1)("TEXT")
-    const charAtResult = string[position]
-    if (charAtResult != null) {
-      newBlock = this.workspace.newBlock("text")
-      newBlock.setFieldValue(charAtResult, "TEXT")
-      return { block: newBlock }
+    const result = string[position]
+    if (result != null) {
+      return { block: newString(this.workspace, result) }
     } else {
       return ({ error: "Out of bounds position" })
     }

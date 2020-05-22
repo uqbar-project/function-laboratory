@@ -18,6 +18,25 @@ const renameField = (input, name) => {
   input.appendField(name)
 }
 
+// Block creation
+const newBlockWithFields = (workspace, type, fields = {}) => {
+  const newBlock = workspace.newBlock(type)
+  Object.entries(fields).forEach(([fieldName, value]) => {
+    newBlock.setFieldValue(value, fieldName);
+  });
+  return newBlock
+}
+
+const newBoolean = (workspace, value) =>
+  newBlockWithFields(workspace, "logic_boolean", { "BOOL": value ? "TRUE" : "FALSE" })
+
+const newNumber = (workspace, value) =>
+  newBlockWithFields(workspace, "math_number", { "NUM": value })
+
+const newString = (workspace, value) =>
+  newBlockWithFields(workspace, "text", { "TEXT": value })
+
+// LIST
 const isOrganizedList = block =>
   block.inputList.filter(isEmptyBlockInput).length === 1 &&
   isEmptyBlockInput(last(block.inputList.filter(isBlockInput)))
