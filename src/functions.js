@@ -1,5 +1,5 @@
 const errorReporter = {
-  report: function(error) {
+  report: function (error) {
     alert(error)
   }
 }
@@ -53,13 +53,13 @@ function buildFuctionBlockWith(name, functionType, cb) {
     },
     reduce() {
       const result = this.getResultBlock()
-      if(result.error) {
+      if (result.error) {
         errorReporter.report(result.error)
       } else {
-        reduceBlock(this)(result.block) 
+        reduceBlock(this)(result.block)
       }
     },
-    generateContextMenu: function() {
+    generateContextMenu: function () {
       return [{
         text: "Reducir",
         callback: this.reduce.bind(this),
@@ -69,7 +69,9 @@ function buildFuctionBlockWith(name, functionType, cb) {
   }
 }
 
-const buildFuctionBlock = ({name, type, fields = [], getResultBlock = function() { return this }}) =>
+const getResultBlockDefault = function () { return { block: this } }
+
+const buildFuctionBlock = ({ name, type, fields = [], getResultBlock = getResultBlockDefault }) =>
   buildFuctionBlockWith(name, type, block => {
     block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
     for (let index = 1; index < type.length - 1; index++) {
@@ -101,7 +103,7 @@ const reduceBlock = expandedBlock => reducedBlock => {
   reducedBlock.generateContextMenu = function () {
     return [{
       text: "Expandir",
-      callback: function() {
+      callback: function () {
         const restoredOldBlock = Blockly.Xml.domToBlock(expandedBlockAsXml, reducedBlock.workspace)
         replace(reducedBlock)(restoredOldBlock)
       },
@@ -119,48 +121,54 @@ const replace = oldBlock => newBlock => {
   newBlock.render()
 }
 
-const newListType = (elementType) => new ListType(createType(elementType))
+const newListType = elementType => new ListType(createType(elementType))
+
+const argFieldValue = (block, arg = 0) => field =>
+  block.getInput(`ARG${arg}`).connection.targetBlock().getResultBlock().block.getFieldValue(field)
 
 buildFuctionBlock({
   name: "even",
   type: ["Number", "Boolean"],
-  getResultBlock: function() {
-    const evenResult = this.getChildren()[0].getFieldValue("NUM") % 2 == 0
+  getResultBlock: function () {
+    const evenResult = argFieldValue(this)("NUM") % 2 == 0
     newBlock = this.workspace.newBlock("logic_boolean")
     newBlock.setFieldValue(evenResult ? "TRUE" : "FALSE", "BOOL")
     return { block: newBlock }
-}})
+  }
+})
 buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
-  getResultBlock: function() {
-    const notResult = this.getChildren()[0].getFieldValue("BOOL") == "TRUE"
+  getResultBlock: function () {
+    const notResult = argFieldValue(this)("BOOL") == "TRUE"
     newBlock = this.workspace.newBlock("logic_boolean")
     newBlock.setFieldValue(notResult ? "FALSE" : "TRUE", "BOOL")
     return { block: newBlock }
-}})
+  }
+})
 buildFuctionBlock({
   name: "length",
   type: ["String", "Number"],
-  getResultBlock: function() {
-    const lengthResult = this.getChildren()[0].getFieldValue("TEXT").length
+  getResultBlock: function () {
+    const lengthResult = argFieldValue(this)("TEXT").length
     newBlock = this.workspace.newBlock("math_number")
     newBlock.setFieldValue(lengthResult, "NUM")
     return { block: newBlock }
-}})//TODO: List(Char)
+  }
+})//TODO: List(Char)
 buildFuctionBlock({
   name: "charAt",
   type: ["Number", "String", "String"],
-  getResultBlock: function() {
-    const position = this.getInput("ARG0").connection.targetBlock().getFieldValue("NUM")
-    const string = this.getInput("ARG1").connection.targetBlock().getFieldValue("TEXT")
+  getResultBlock: function () {
+    const position = argFieldValue(this, 0)("NUM")
+    const string = argFieldValue(this, 1)("TEXT")
     const charAtResult = string[position]
-    if(charAtResult != null) {
+    if (charAtResult != null) {
       newBlock = this.workspace.newBlock("text")
       newBlock.setFieldValue(charAtResult, "TEXT")
       return { block: newBlock }
     } else {
-      return ({ error: "Out of bounds position"})
+      return ({ error: "Out of bounds position" })
     }
   }
 })
@@ -171,11 +179,12 @@ buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 buildFuctionBlock({
   name: "id",
   type: ["a", "a"],
-  getResultBlock: function() {
+  getResultBlock: function () {
     const xmlBlock = Blockly.Xml.blockToDom(this.getChildren()[0])
     const copiedBlock = Blockly.Xml.domToBlock(xmlBlock, this.workspace)
     return { block: copiedBlock }
-} })
+  }
+})
 buildFuctionBlock({
   name: "composition",
   type: [["b", "c"], ["a", "b"], "a", "c"],
@@ -268,11 +277,13 @@ Blockly.Blocks["math_arithmetic"].onchange = function (event) {
   onChangeFunction.bind(this)(event)
 }
 
-Blockly.Blocks["math_number"].onchange = function (event) { onChangeValue.bind(this)(event) }
-Blockly.Blocks["math_number"].outputType = createType("Number")
+function decorateValueBlock(name, type) {
+  Blockly.Blocks[name].onchange = function (event) { onChangeValue.bind(this)(event) }
+  Blockly.Blocks[name].outputType = createType(type)
+  decorateInit(Blockly.Blocks[name], function () { this.getResultBlock = getResultBlockDefault })
+}
 
-Blockly.Blocks["text"].outputType = createType("String")
-Blockly.Blocks["text"].onchange = function (event) { onChangeValue.bind(this)(event) }
+decorateValueBlock("math_number", "Number")
+decorateValueBlock("text", "String")
+decorateValueBlock("logic_boolean", "Boolean")
 
-Blockly.Blocks["logic_boolean"].outputType = createType("Boolean")
-Blockly.Blocks["logic_boolean"].onchange = function (event) { onChangeValue.bind(this)(event) }

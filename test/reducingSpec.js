@@ -37,6 +37,23 @@ describe('Reducing expressions', () => {
     })
   })
 
+  onWorkspace('reducing applied function works for expresion arguments', workspace => {
+    const not = workspace.newBlock('not')
+    const even = workspace.newBlock('even')
+    const zero = workspace.newBlock('math_number')
+    connect(even, zero)
+    connect(not, even)
+
+    not.reduce()
+
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'not')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'even')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'math_number')
+    assertAnyBlockInWorkspaceSatisfies(workspace, (block) => {
+      return block.type == 'logic_boolean' && block.getFieldValue("BOOL") == "FALSE"
+    })
+  })
+
   describe('Reduction results', () => {
     describe('even', () => {
       onWorkspace('When it is applied an even number it reduces to true', workspace => {
