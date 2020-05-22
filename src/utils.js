@@ -18,6 +18,8 @@ const renameField = (input, name) => {
   input.appendField(name)
 }
 
+const copyBlock = (workspace, block) => Blockly.Xml.domToBlock(Blockly.Xml.blockToDom(block), workspace)
+
 // Block creation
 const newBlockWithFields = (workspace, type, fields = {}) => {
   const newBlock = workspace.newBlock(type)

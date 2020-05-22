@@ -51,8 +51,11 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setTooltip(blockType(this).toString())
       this.setHelpUrl("")
     },
+    getReduction() {
+      return this.getResultBlock(...allArgBlocks(this))
+    },
     reduce() {
-      const result = this.getResultBlock()
+      const result = this.getReduction()
       if (result.error) {
         errorReporter.report(result.error)
       } else {
@@ -123,39 +126,50 @@ const replace = oldBlock => newBlock => {
 
 const newListType = elementType => new ListType(createType(elementType))
 
+const argBlock = (block, arg = 0) => {
+  const input = block.getInput(`ARG${arg}`)
+  return input && input.connection.targetBlock()
+}
+
+const allArgBlocks = block =>
+  Array(block.inputList.length).fill().map((_, i) => argBlock(block, i))
+
+const resultFieldValue = (block, field) =>
+  block.getReduction().block.getFieldValue(field)
+
 const argFieldValue = (block, arg = 0) => field =>
-  block.getInput(`ARG${arg}`).connection.targetBlock().getResultBlock().block.getFieldValue(field)
+  resultFieldValue(argBlock(block, arg), field)
 
 buildFuctionBlock({
   name: "even",
   type: ["Number", "Boolean"],
-  getResultBlock: function () {
-    const result = argFieldValue(this)("NUM") % 2 == 0
+  getResultBlock: function (arg) {
+    const result = resultFieldValue(arg, "NUM") % 2 == 0
     return { block: newBoolean(this.workspace, result) }
   }
 })
 buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
-  getResultBlock: function () {
-    const result = argFieldValue(this)("BOOL") == "FALSE"
+  getResultBlock: function (arg) {
+    const result = resultFieldValue(arg, "BOOL") == "FALSE"
     return { block: newBoolean(this.workspace, result) }
   }
 })
 buildFuctionBlock({
   name: "length",
   type: ["String", "Number"],
-  getResultBlock: function () {
-    const result = argFieldValue(this)("TEXT").length
+  getResultBlock: function (arg) {
+    const result = resultFieldValue(arg, "TEXT").length
     return { block: newNumber(this.workspace, result) }
   }
 })//TODO: List(Char)
 buildFuctionBlock({
   name: "charAt",
   type: ["Number", "String", "String"],
-  getResultBlock: function () {
-    const position = argFieldValue(this, 0)("NUM")
-    const string = argFieldValue(this, 1)("TEXT")
+  getResultBlock: function (arg0, arg1) {
+    const position = resultFieldValue(arg0, "NUM")
+    const string = resultFieldValue(arg1, "TEXT")
     const result = string[position]
     if (result != null) {
       return { block: newString(this.workspace, result) }
@@ -171,16 +185,17 @@ buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 buildFuctionBlock({
   name: "id",
   type: ["a", "a"],
-  getResultBlock: function () {
-    const xmlBlock = Blockly.Xml.blockToDom(this.getChildren()[0])
-    const copiedBlock = Blockly.Xml.domToBlock(xmlBlock, this.workspace)
-    return { block: copiedBlock }
+  getResultBlock: function (arg) {
+    return { block: copyBlock(this.workspace, arg) }
   }
 })
 buildFuctionBlock({
   name: "composition",
   type: [["b", "c"], ["a", "b"], "a", "c"],
-  fields: ["", ".", "$"]
+  fields: ["", ".", "$"],
+  getResultBlock: function (f2, f1, value) {
+    return { block: f2.getResultBlock(f1.getResultBlock(value).block).block }
+  }
 })
 
 buildInfixFuctionBlock(["at", "!!"], [newListType("a"), "Number", "a"])
@@ -272,7 +287,10 @@ Blockly.Blocks["math_arithmetic"].onchange = function (event) {
 function decorateValueBlock(name, type) {
   Blockly.Blocks[name].onchange = function (event) { onChangeValue.bind(this)(event) }
   Blockly.Blocks[name].outputType = createType(type)
-  decorateInit(Blockly.Blocks[name], function () { this.getResultBlock = getResultBlockDefault })
+  decorateInit(Blockly.Blocks[name], function () {
+    this.getResultBlock = getResultBlockDefault
+    this.getReduction = getResultBlockDefault
+  })
 }
 
 decorateValueBlock("math_number", "Number")

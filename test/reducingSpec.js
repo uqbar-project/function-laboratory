@@ -107,20 +107,6 @@ describe('Reducing expressions', () => {
       })
     })
 
-    describe('id', () => {
-      onWorkspace('when it is applied any paramter it reduces to that parameter', workspace => {
-        const id = workspace.newBlock('id')
-        const zero = newBlockWithFields(workspace, 'math_number', {NUM:0})
-        connect(id, zero)
-
-        id.reduce()
-
-        assertReplacedByBlockThatSatisfies(workspace, id, (newBlock) => {
-          return newBlock.type == 'math_number' && newBlock.getFieldValue("NUM") == 0
-        })
-      })
-    })
-
     describe('length', () => {
       onWorkspace('when it is applied an empty string it reduces to 0', workspace => {
         const length = workspace.newBlock('length')
@@ -174,6 +160,38 @@ describe('Reducing expressions', () => {
         assert.exists(workspace.getBlockById(charAt.id))
         assert.exists(workspace.getBlockById(hello.id))
         assert.exists(workspace.getBlockById(six.id))
+      })
+    })
+
+    describe('id', () => {
+      onWorkspace('when it is applied any paramter it reduces to that parameter', workspace => {
+        const id = workspace.newBlock('id')
+        const zero = newBlockWithFields(workspace, 'math_number', {NUM:0})
+        connect(id, zero)
+
+        id.reduce()
+
+        assertReplacedByBlockThatSatisfies(workspace, id, (newBlock) => {
+          return newBlock.type == 'math_number' && newBlock.getFieldValue("NUM") == 0
+        })
+      })
+    })
+
+    describe('composition', () => {
+      onWorkspace('reduction works', workspace => {
+        const composition = workspace.newBlock('composition')
+        const not = workspace.newBlock('not')
+        const even = workspace.newBlock('even')
+        const zero = newBlockWithFields(workspace, 'math_number', {NUM:0})
+        connect(composition, not, 0)
+        connect(composition, even, 1)
+        connect(composition, zero, 2)
+
+        composition.reduce()
+
+        assertReplacedByBlockThatSatisfies(workspace, composition, (newBlock) => {
+          return newBlock.type == 'logic_boolean' && newBlock.getFieldValue("BOOL") == "FALSE"
+        })
       })
     })
   })
