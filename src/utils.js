@@ -29,6 +29,12 @@ const newBlockWithFields = (workspace, type, fields = {}) => {
   return newBlock
 }
 
+const newFunction = (workspace, type, ...args) => {
+  const block = newBlockWithFields(workspace, type)
+  args.forEach((arg, i) => connect(block, arg, i))
+  return block
+}
+
 const newBoolean = (workspace, value) =>
   newBlockWithFields(workspace, "logic_boolean", { "BOOL": value ? "TRUE" : "FALSE" })
 
