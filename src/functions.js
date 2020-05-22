@@ -51,8 +51,12 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setTooltip(blockType(this).toString())
       this.setHelpUrl("")
     },
-    getReduction() {
-      return this.getResultBlock(...allArgBlocks(this))
+    getReduction(...args) {
+      const paramCount = this.inputList.filter(isBlockInput).length
+      const stackArgs = args.reverse()
+      const allArgs = Array(paramCount).fill()
+        .map((_, i) => argBlock(this, i) || stackArgs.pop())
+      return this.getResultBlock(...allArgs)
     },
     reduce() {
       const result = this.getReduction()
@@ -135,15 +139,12 @@ const allArgBlocks = block =>
   Array(block.inputList.length).fill().map((_, i) => argBlock(block, i))
 
 const resultFieldValue = (block, field) => {
-  // TODO: Ver qué onda la aplicación parcial, donde hay atributos que están en el bloque y otros que llegar como argumento.
   const reduction = block.getReduction().block
   const value = reduction.getFieldValue(field)
   if (reduction != block) { reduction.dispose() } // Dispose intermediate result blocks
   return value
 }
 
-const argFieldValue = (block, arg = 0) => field =>
-  resultFieldValue(argBlock(block, arg), field)
 
 buildFuctionBlock({
   name: "even",
@@ -157,7 +158,7 @@ buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
   getResultBlock: function (arg) {
-    const result = resultFieldValue(arg, "BOOL") == "FALSE"
+    const result = !getBooleanValue(arg)
     return { block: newBoolean(this.workspace, result) }
   }
 })
@@ -199,7 +200,10 @@ buildFuctionBlock({
   type: [["b", "c"], ["a", "b"], "a", "c"],
   fields: ["", ".", "$"],
   getResultBlock: function (f2, f1, value) {
-    return { block: f2.getResultBlock(f1.getResultBlock(value).block).block }
+    const innerResult = f1.getReduction(value).block
+    const result = f2.getReduction(innerResult)
+    innerResult.dispose() // Dispose intermediate result blocks
+    return result
   }
 })
 

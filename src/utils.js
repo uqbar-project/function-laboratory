@@ -31,7 +31,7 @@ const newBlockWithFields = (workspace, type, fields = {}) => {
 
 const newFunction = (workspace, type, ...args) => {
   const block = newBlockWithFields(workspace, type)
-  args.forEach((arg, i) => connect(block, arg, i))
+  args.forEach((arg, i) => { if (arg) { connect(block, arg, i) } })
   return block
 }
 
@@ -43,6 +43,9 @@ const newNumber = (workspace, value) =>
 
 const newString = (workspace, value) =>
   newBlockWithFields(workspace, "text", { "TEXT": value })
+
+// INTERPRETER
+const getBooleanValue = block => resultFieldValue(block, "BOOL") == "TRUE"
 
 // LIST
 const isOrganizedList = block =>
@@ -66,6 +69,11 @@ const appendNewInputList = (block, inputName) => {
   block.moveInputBefore(inputName, "CLOSE")
   renameField(block.inputList[0], "[")
 }
+
+const allListElements = blockList =>
+  blockList.inputList
+    .filter(input => input.name.includes("ELEMENT") && input.connection.targetBlock())
+    .map(input => input.connection.targetBlock())
 // Blockly
 
 // Iterables

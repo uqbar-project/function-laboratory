@@ -32,6 +32,36 @@ describe('Reducing expressions', () => {
     assertEqualBlocksInWorkspace(workspace, newBoolean(workspace, false))
   })
 
+  onWorkspace('reducing partial applied function arguments', workspace => {
+    const charAt0 = newFunction(workspace, 'charAt', newNumber(workspace, 0))
+    const legthCharAt0ASD = newFunction(workspace, 'composition',
+      newFunction(workspace, 'length'), charAt0, newString(workspace, "ASD")
+    )
+
+    legthCharAt0ASD.reduce()
+
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'composition')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'length')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'charAt')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'text')
+    assertEqualBlocksInWorkspace(workspace, newNumber(workspace, 1))
+  })
+
+  onWorkspace('reducing positional partial applied function arguments', workspace => {
+    const charAtASD = newFunction(workspace, 'charAt', undefined, newString(workspace, "ASD"))
+    const legthCharAt0ASD = newFunction(workspace, 'composition',
+      newFunction(workspace, 'length'), charAtASD, newNumber(workspace, 0)
+    )
+
+    legthCharAt0ASD.reduce()
+
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'composition')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'length')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'charAt')
+    assertBlockWithTypeDoesNotExistInWorkspace(workspace, 'text')
+    assertEqualBlocksInWorkspace(workspace, newNumber(workspace, 1))
+  })
+
   describe('Reduction results', () => {
     describe('even', () => {
       onWorkspace('When it is applied an even number it reduces to true', workspace => {
