@@ -134,8 +134,12 @@ const argBlock = (block, arg = 0) => {
 const allArgBlocks = block =>
   Array(block.inputList.length).fill().map((_, i) => argBlock(block, i))
 
-const resultFieldValue = (block, field) =>
-  block.getReduction().block.getFieldValue(field)
+const resultFieldValue = (block, field) => {
+  const reduction = block.getReduction().block
+  const value = reduction.getFieldValue(field)
+  if (reduction != block) { reduction.dispose() } // Dispose intermediate result blocks
+  return value
+}
 
 const argFieldValue = (block, arg = 0) => field =>
   resultFieldValue(argBlock(block, arg), field)
