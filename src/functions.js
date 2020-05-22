@@ -135,6 +135,7 @@ const allArgBlocks = block =>
   Array(block.inputList.length).fill().map((_, i) => argBlock(block, i))
 
 const resultFieldValue = (block, field) => {
+  // TODO: Ver qué onda la aplicación parcial, donde hay atributos que están en el bloque y otros que llegar como argumento.
   const reduction = block.getReduction().block
   const value = reduction.getFieldValue(field)
   if (reduction != block) { reduction.dispose() } // Dispose intermediate result blocks
