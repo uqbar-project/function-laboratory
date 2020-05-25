@@ -57,12 +57,11 @@ const organizeList = block => {
     block.inputList
       .filter(isEmptyBlockInput)
       .forEach(removeInput(block))
-    const newInputName = `ELEMENT${block.inputIndex++}`
-    appendNewInputList(block, newInputName)
+    appendNewInputList(block)
   }
 }
 
-const appendNewInputList = (block, inputName) => {
+const appendNewInputList = (block, inputName = `ELEMENT${block.inputIndex++}`) => {
   block.appendValueInput(inputName)
     .appendField(",")
     .inputType = createType("a")

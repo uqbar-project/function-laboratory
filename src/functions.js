@@ -210,7 +210,16 @@ buildFuctionBlock({
 buildInfixFuctionBlock(["at", "!!"], [newListType("a"), "Number", "a"])
 buildFuctionBlock({
   name: "any",
-  type: [["a", "Boolean"], newListType("a"), "Boolean"]
+  type: [["a", "Boolean"], newListType("a"), "Boolean"],
+  getResultBlock: function (condition, list) {
+    const result = allListElements(list).some(e => {
+      const booleanBlock = condition.getReduction(e).block
+      const bul = getBooleanValue(booleanBlock)
+      booleanBlock.dispose() // Dispose intermediate result blocks
+      return bul
+    })
+    return { block: newBoolean(this.workspace, result) }
+  }
 })
 buildFuctionBlock({
   name: "all",

@@ -135,6 +135,31 @@ describe('Reducing expressions', () => {
         assertEqualReductionBlock(odd0, newBoolean(workspace, false))
       })
     })
+
+    describe('any', () => {
+      onWorkspace('on empty list', workspace => {
+        const anyEvenEmpty = newFunction(workspace, 'any',
+          newFunction(workspace, 'even'), newList(workspace, [])
+        )
+        assertEqualReductionBlock(anyEvenEmpty, newBoolean(workspace, false))
+      })
+
+      onWorkspace('When any element apply', workspace => {
+        const numbers = [1, 2].map(n => newNumber(workspace, n))
+        const anyEven12 = newFunction(workspace, 'any',
+          newFunction(workspace, 'even'), newList(workspace, numbers)
+        )
+        assertEqualReductionBlock(anyEven12, newBoolean(workspace, true))
+      })
+
+      onWorkspace('When no element apply', workspace => {
+        const numbers = [1, 3].map(n => newNumber(workspace, n))
+        const anyEven13 = newFunction(workspace, 'any',
+          newFunction(workspace, 'even'), newList(workspace, numbers)
+        )
+        assertEqualReductionBlock(anyEven13, newBoolean(workspace, false))
+      })
+    })
   })
 })
 
