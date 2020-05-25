@@ -160,6 +160,18 @@ describe('Reducing expressions', () => {
         assertEqualReductionBlock(anyEven13, newBoolean(workspace, false))
       })
     })
+
+    describe('map', () => {
+      onWorkspace('reduction works', workspace => {
+        const numbers = [1, 3].map(n => newNumber(workspace, n))
+        const words = ["a", "asd"].map(s => newString(workspace, s))
+        const mapLengthWords = newFunction(workspace, 'map',
+          newFunction(workspace, 'length'), newList(workspace, words)
+        )
+        assertEqualReductionBlock(mapLengthWords, newList(workspace, numbers))
+      })
+    })
+
   })
 })
 
@@ -185,4 +197,8 @@ const assertEqualBlocks = (block, expectedBlock) => {
     assert.equal(field.name, expectedField.name)
     assert.equal(field.getValue(), expectedField.getValue())
   })
+  zip(
+    block.getChildren(),
+    expectedBlock.getChildren()
+  ).forEach(([block, expectedBlock]) => assertEqualBlocks(block, expectedBlock))
 }

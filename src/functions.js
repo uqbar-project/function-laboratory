@@ -105,7 +105,10 @@ function decorateInit(block, initExtension) {
 }
 
 const reduceBlock = expandedBlock => reducedBlock => {
+  // Result blocks are not editable
   reducedBlock.setEditable(false)
+  reducedBlock.getChildren().forEach(child => child.setEditable(false))
+
   expandedBlockAsXml = Blockly.Xml.blockToDom(expandedBlock)
   reducedBlock.generateContextMenu = function () {
     return [{
@@ -126,6 +129,10 @@ const replace = oldBlock => newBlock => {
   newBlock.moveTo(oldBlock.getRelativeToSurfaceXY())
   oldBlock.dispose()
   newBlock.render()
+  newBlock.getChildren().forEach(child => {
+    child.initSvg()
+    child.render()
+  })
 }
 
 const newListType = elementType => new ListType(createType(elementType))
@@ -233,7 +240,11 @@ buildFuctionBlock({
 })
 buildFuctionBlock({
   name: "map",
-  type: [["a", "b"], newListType("a"), newListType("b")]
+  type: [["a", "b"], newListType("a"), newListType("b")],
+  getResultBlock: function (transform, list) {
+    const result = allListElements(list).map(e => transform.getReduction(e).block)
+    return { block: newList(this.workspace, result) }
+  }
 })
 buildFuctionBlock({
   name: "maximum",
