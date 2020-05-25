@@ -20,6 +20,12 @@ const renameField = (input, name) => {
 
 const copyBlock = (workspace, block) => Blockly.Xml.domToBlock(Blockly.Xml.blockToDom(block), workspace)
 
+const connectInputBlock = (block, parameterBlock, inputIndex) => {
+  block.inputList
+    .filter(isBlockInput)[inputIndex]
+    .connection.connect(parameterBlock.outputConnection)
+}
+
 // Block creation
 const newBlockWithFields = (workspace, type, fields = {}) => {
   const newBlock = workspace.newBlock(type)
@@ -43,6 +49,15 @@ const newNumber = (workspace, value) =>
 
 const newString = (workspace, value) =>
   newBlockWithFields(workspace, "text", { "TEXT": value })
+
+const newList = (workspace, elementBlocks) => {
+  const list = workspace.newBlock('list')
+  elementBlocks.forEach((e, i) => {
+    appendNewInputList(list)
+    connectInputBlock(list, e, i)
+  })
+  return list
+}
 
 // INTERPRETER
 const getBooleanValue = block => resultFieldValue(block, "BOOL") == "TRUE"

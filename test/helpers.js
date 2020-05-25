@@ -23,7 +23,7 @@ const onWorkspace = (name, test) => {
 }
 
 const connect = (block, parameterBlock, inputIndex = 0) => {
-  block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
+  connectInputBlock(block, parameterBlock, inputIndex)
   forceBlocklyEvents()
   forceBlocklyEvents() // ??
 }
@@ -54,14 +54,3 @@ const assertColor = (block, color) => {
 }
 // Assertions
 
-
-// TODO: Move to Utils, think better strategy for list block instantiantion
-
-const newList = (workspace, elementBlocks) => {
-  const list = workspace.newBlock('list')
-  elementBlocks.forEach((e, i) => {
-    appendNewInputList(list)
-    connect(list, e, i)
-  })
-  return list
-}
