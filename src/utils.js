@@ -18,6 +18,51 @@ const renameField = (input, name) => {
   input.appendField(name)
 }
 
+const copyBlock = (workspace, block) => Blockly.Xml.domToBlock(Blockly.Xml.blockToDom(block), workspace)
+
+const connectInputBlock = (block, parameterBlock, inputIndex) => {
+  block.inputList
+    .filter(isBlockInput)[inputIndex]
+    .connection.connect(parameterBlock.outputConnection)
+}
+
+// Block creation
+const newBlockWithFields = (workspace, type, fields = {}) => {
+  const newBlock = workspace.newBlock(type)
+  Object.entries(fields).forEach(([fieldName, value]) => {
+    newBlock.setFieldValue(value, fieldName);
+  });
+  return newBlock
+}
+
+const newFunction = (workspace, type, ...args) => {
+  const block = newBlockWithFields(workspace, type)
+  args.forEach((arg, i) => { if (arg) { connect(block, arg, i) } })
+  return block
+}
+
+const newBoolean = (workspace, value) =>
+  newBlockWithFields(workspace, "logic_boolean", { "BOOL": value ? "TRUE" : "FALSE" })
+
+const newNumber = (workspace, value) =>
+  newBlockWithFields(workspace, "math_number", { "NUM": value })
+
+const newString = (workspace, value) =>
+  newBlockWithFields(workspace, "text", { "TEXT": value })
+
+const newList = (workspace, elementBlocks) => {
+  const list = workspace.newBlock('list')
+  elementBlocks.forEach((e, i) => {
+    appendNewInputList(list)
+    connectInputBlock(list, e, i)
+  })
+  return list
+}
+
+// INTERPRETER
+const getBooleanValue = block => resultFieldValue(block, "BOOL") == "TRUE"
+
+// LIST
 const isOrganizedList = block =>
   block.inputList.filter(isEmptyBlockInput).length === 1 &&
   isEmptyBlockInput(last(block.inputList.filter(isBlockInput)))
@@ -27,18 +72,22 @@ const organizeList = block => {
     block.inputList
       .filter(isEmptyBlockInput)
       .forEach(removeInput(block))
-    const newInputName = `ELEMENT${block.inputIndex++}`
-    appendNewInputList(block, newInputName)
+    appendNewInputList(block)
   }
 }
 
-const appendNewInputList = (block, inputName) => {
+const appendNewInputList = (block, inputName = `ELEMENT${block.inputIndex++}`) => {
   block.appendValueInput(inputName)
     .appendField(",")
     .inputType = createType("a")
   block.moveInputBefore(inputName, "CLOSE")
   renameField(block.inputList[0], "[")
 }
+
+const allListElements = blockList =>
+  blockList.inputList
+    .filter(input => input.name.includes("ELEMENT") && input.connection.targetBlock())
+    .map(input => input.connection.targetBlock())
 // Blockly
 
 // Iterables

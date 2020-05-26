@@ -23,7 +23,7 @@ const onWorkspace = (name, test) => {
 }
 
 const connect = (block, parameterBlock, inputIndex = 0) => {
-  block.inputList[inputIndex].connection.connect(parameterBlock.outputConnection)
+  connectInputBlock(block, parameterBlock, inputIndex)
   forceBlocklyEvents()
   forceBlocklyEvents() // ??
 }
@@ -53,3 +53,4 @@ const assertColor = (block, color) => {
   assert.equal(colorShow(block), color)
 }
 // Assertions
+

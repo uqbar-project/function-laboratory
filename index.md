@@ -44,6 +44,7 @@
     </category>
   </category>
   <category name="Literales">
+    <block type="logic_boolean"></block>
     <block type="math_number"></block>
     <block type="text"></block>
     <block type="list"></block>
