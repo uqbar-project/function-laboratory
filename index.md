@@ -1,5 +1,6 @@
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 
+
 <script src="blockly/blockly_compressed.js"></script>
 <script src="blockly/blocks_compressed.js"></script>
 <script src="blockly/msg/js/es.js"></script>
@@ -53,5 +54,6 @@
 </xml>
 
 <script>
+  $(".wrapper").style.width = "90%" // Modify Jekyll theme
   var workspace = Blockly.inject('blocklyDiv', {toolbox: document.getElementById('toolbox')})
 </script>
