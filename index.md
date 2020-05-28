@@ -54,6 +54,6 @@
 </xml>
 
 <script>
-  $(".wrapper").style.width = "90%" // Modify Jekyll theme
+  document.getElementsByClassName("wrapper")[0].style.width = "90%" // Modify Jekyll theme
   var workspace = Blockly.inject('blocklyDiv', {toolbox: document.getElementById('toolbox')})
 </script>
