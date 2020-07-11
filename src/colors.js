@@ -22,3 +22,11 @@ const colorShow = (block) => {
   if (block.getParent()) return colorShow(block.getParent())
   return colorType(block)
 }
+
+const combineColors = (colorsList) => {
+  var output = 0 
+    for(var i=1 ; i <= colorsList.length ; i++){
+      output = output + colorsList[i-1]*i
+     }
+    return output % 360
+}
