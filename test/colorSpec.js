@@ -11,10 +11,11 @@ describe('Colors', () => {
     assertColor(number, typeToColor(Number))
   })
 
-  onWorkspace('function color is the sum of the color of its inputs types and its output type', workspace => {
-    const even = workspace.newBlock('even')
-    assertColor(even, typeToColor(Number) + typeToColor(Boolean) + colorForType('Function'))
-  })
+  onWorkspace('function color es la suma del producto de los colores de los tipos de acuerdo a su posicion', workspace => {
+    const fType = createType(["Number", "Boolean"])
+    var colorList = ['Function','Number','Boolean'].map (colorForType)
+    assert.equal(typeToColor(fType), combineColors(colorList))
+    })
 
   onWorkspace('partial applied function color is the same as the color of a function whose type is the same as the the partial applied function s type', workspace => {
     const even = workspace.newBlock('even')
@@ -45,15 +46,24 @@ describe('Colors', () => {
 
   onWorkspace('empty list color', workspace => {
     const list = workspace.newBlock('list')
-    assertColor(list, typeToColor(createType('a')) + colorForType('List'))
+    var colorList = ['List','Any'].map (colorForType)
+    assertColor(list, combineColors(colorList))
   })
 
   onWorkspace('full list color', workspace => {
     const list = workspace.newBlock('list')
     const text = workspace.newBlock('text')
-    
     connect(list, text)
-
-    assertColor(list, typeToColor(String) + colorForType('List'))
+    var colorList = ['List','String'].map (colorForType)
+    assertColor(list, combineColors(colorList))
   })
+
+  onWorkspace('distintos colores para funciones con los mismos tipos de parametros pero en distinto orden', workspace => {
+    const fABType = createType(["Number", "Boolean"])
+    const fBAType = createType(["Boolean", "Number"])
+
+    assert.notEqual(typeToColor(fABType), typeToColor(fBAType))
+  })
+
+
 })

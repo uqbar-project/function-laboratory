@@ -80,7 +80,9 @@ class EstructuralType extends Type {
   }
 
   toColor(typeColors) {
-    return this.attributeValues().map(type => type.toColor(typeColors)).reduce(add, colorForType(this.name))
+    var colorList =  this.attributeValues().map(type => type.toColor(typeColors))
+    colorList = [colorForType(this.name)].concat(colorList)
+    return combineColors(colorList)
   }
 }
 
