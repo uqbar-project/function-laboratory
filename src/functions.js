@@ -4,23 +4,27 @@ const errorReporter = {
   }
 }
 
-function onChangeValue(event) {
+function onChangeBlock(event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)
   }
-  this.setColour(colorShow(this))
+  if (!blockConstraints(this).error) {
+    this.setColour(colorShow(this))
+    this.setTooltip(blockType(this).toString())
+  }
+}
+
+function onChangeValue(event) {
+  onChangeBlock.call(this, event)
 }
 
 function onChangeFunction(event) {
-  if (event.blockId == this.id) {
-    checkParentConnection(this)
-  }
+  onChangeBlock.call(this, event)
   if (this.getParent() && blockType(this).isFunctionType()) {
     this.setCollapsed(true)
   } else {
     this.setCollapsed(false)
   }
-  this.setColour(colorShow(this))
 }
 
 function onChangeList(event) {
@@ -48,7 +52,6 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setOutput(true)
       this.setOnChange(onChangeFunction.bind(this))
       setFunctionType(this, ...functionType)
-      this.setTooltip(blockType(this).toString())
       this.setHelpUrl("")
     },
     getReduction(...args) {
@@ -268,7 +271,6 @@ Blockly.Blocks['list'] = {
       .appendField("]")
     this.setInputsInline(true)
     this.setOutput(true, null)
-    this.setTooltip("")
     this.setHelpUrl("")
     this.setOnChange(function (event) { onChangeList.bind(this)(event) })
     this.outputType = new ListType(createType("a"))
