@@ -1,5 +1,6 @@
+<meta charset="UTF-8">
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-
+<link rel="stylesheet" href="index.css">
 
 <script src="dependencies/jquery-3.6.0.min.js"></script>
 <script src="dependencies/notify.min.js"></script>
