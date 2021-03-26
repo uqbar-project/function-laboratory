@@ -1,0 +1,1 @@
+sinon.stub(errorReporter, 'report')

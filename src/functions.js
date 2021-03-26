@@ -184,7 +184,7 @@ buildFuctionBlock({
     if (result != null) {
       return { block: newString(this.workspace, result) }
     } else {
-      return ({ error: "Out of bounds position" })
+      return ({ error: "Posición fuera de límites" })
     }
   }
 })

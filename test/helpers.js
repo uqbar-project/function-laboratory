@@ -52,5 +52,9 @@ const assertRejectedConnection = (parentBlock, block) => {
 const assertColor = (block, color) => {
   assert.equal(colorShow(block), color)
 }
+
+const assertErrorReported = (message) => {
+  assert.equal(errorReporter.report.lastCall.firstArg, message)
+}
 // Assertions
 
