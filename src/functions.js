@@ -1,9 +1,3 @@
-const errorReporter = {
-  report: function (error) {
-    alert(error)
-  }
-}
-
 function onChangeBlock(event) {
   if (event.blockId == this.id) {
     checkParentConnection(this)

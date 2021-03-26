@@ -1,9 +1,11 @@
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 
 
-<script src="blockly/blockly_compressed.js"></script>
-<script src="blockly/blocks_compressed.js"></script>
-<script src="blockly/msg/js/es.js"></script>
+<script src="dependencies/jquery-3.6.0.min.js"></script>
+<script src="dependencies/notify.min.js"></script>
+<script src="dependencies/blockly/blockly_compressed.js"></script>
+<script src="dependencies/blockly/blocks_compressed.js"></script>
+<script src="dependencies/blockly/msg/js/es.js"></script>
 <script src="src/renaming.js"></script>
 <script src="src/constraintSolving.js"></script>
 <script src="src/typeSystem.js"></script>
