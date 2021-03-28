@@ -1,26 +1,24 @@
-const errorReporter = {
-  report: function (error) {
-    alert(error)
+function onChangeBlock(event) {
+  if (event.blockId == this.id) {
+    checkParentConnection(this)
+  }
+  if (!blockConstraints(this).error) {
+    this.setColour(colorShow(this))
+    this.setTooltip(blockType(this).toString())
   }
 }
 
 function onChangeValue(event) {
-  if (event.blockId == this.id) {
-    checkParentConnection(this)
-  }
-  this.setColour(colorShow(this))
+  onChangeBlock.call(this, event)
 }
 
 function onChangeFunction(event) {
-  if (event.blockId == this.id) {
-    checkParentConnection(this)
-  }
+  onChangeBlock.call(this, event)
   if (this.getParent() && blockType(this).isFunctionType()) {
     this.setCollapsed(true)
   } else {
     this.setCollapsed(false)
   }
-  this.setColour(colorShow(this))
 }
 
 function onChangeList(event) {
@@ -48,7 +46,6 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setOutput(true)
       this.setOnChange(onChangeFunction.bind(this))
       setFunctionType(this, ...functionType)
-      this.setTooltip(blockType(this).toString())
       this.setHelpUrl("")
     },
     getReduction(...args) {
@@ -187,7 +184,7 @@ buildFuctionBlock({
     if (result != null) {
       return { block: newString(this.workspace, result) }
     } else {
-      return ({ error: "Out of bounds position" })
+      return ({ error: "Posición fuera de límites" })
     }
   }
 })
@@ -268,7 +265,6 @@ Blockly.Blocks['list'] = {
       .appendField("]")
     this.setInputsInline(true)
     this.setOutput(true, null)
-    this.setTooltip("")
     this.setHelpUrl("")
     this.setOnChange(function (event) { onChangeList.bind(this)(event) })
     this.outputType = new ListType(createType("a"))

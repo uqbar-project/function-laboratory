@@ -9,9 +9,13 @@
 
 <body>
     <div id="mocha"></div>
-    <script src="../blockly/blockly_compressed.js"></script>
-    <script src="../blockly/blocks_compressed.js"></script>
-    <script src="../blockly/msg/js/es.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/mocha-teamcity-reporter/lib/teamcityBrowser.js"></script>
+    <script src="../node_modules/sinon/pkg/sinon.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../dependencies/blockly/blockly_compressed.js"></script>
+    <script src="../dependencies/blockly/blocks_compressed.js"></script>
+    <script src="../dependencies/blockly/msg/js/es.js"></script>
     <script src="../src/renaming.js"></script>
     <script src="../src/constraintSolving.js"></script>
     <script src="../src/typeSystem.js"></script>
@@ -19,17 +23,17 @@
     <script src="../src/colors.js"></script>
     <script src="../src/utils.js"></script>
     <script src="../src/functions.js"></script>
-    <script src="../node_modules/mocha/mocha.js"></script>
-    <script src="../node_modules/mocha-teamcity-reporter/lib/teamcityBrowser.js"></script>
-    <script src="../node_modules/chai/chai.js"></script>
     <script>mocha.setup('bdd');</script>
     <script src="helpers.js"></script>
+    <script src="mocks.js"></script>
     <script src="connectionFunctionSpec.js"></script>
     <script src="connectionListSpec.js"></script>
     <script src="typeSpec.js"></script>
     <script src="colorSpec.js"></script>
     <script src="constraintSolvingSpec.js"></script>
     <script src="reducingSpec.js"></script>
+    <script src="tooltipSpec.js"></script>
+    <script src="errorReporterSpec.js"></script>
     <script>mocha.run();</script>
 </body>
 

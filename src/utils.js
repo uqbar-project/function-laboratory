@@ -1,4 +1,23 @@
 // Blockly
+const obtenerSolucionXml = (withIds) => {
+  var text = Blockly.Xml.domToPrettyText(Blockly.Xml.workspaceToDom(Blockly.mainWorkspace))
+  return withIds ? text : text.replace(/ id="[^"]*"/g, "");
+}
+
+const cargarSolucionXml = (codigo) => {
+  var workspace = Blockly.getMainWorkspace();
+  workspace.clear();
+  var xml = Blockly.Xml.textToDom(codigo);
+  Blockly.Xml.domToWorkspace(xml, workspace);
+}
+
+const guardarSolucionEnUrl = () => {
+  var xml = this.obtenerSolucionXml(true);
+  var codigo = btoa(xml);
+  window.location.href = window.location.href.split("?")[0] + "?codigo=" + encodeURIComponent(codigo);
+  console.log("Se guardó correctamente la solución, ahora se puede recargar la página sin perder el workspace.");
+}
+
 const isBlockInput = input => input.type === 1
 
 const isEmptyInput = input => !input.connection.targetConnection

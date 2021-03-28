@@ -9,9 +9,13 @@ function checkInputConnection(input) {
     const inputType = getInputType(input)
     const targetType = blockType(targetBlock)
     const result = solveConstraints({ constraints: inputType.eqConstraints(targetType) })
-    if (result.error) { bump(targetBlock) }
-  } catch {
+    if (result.error) {
+      bump(targetBlock)
+      errorReporter.report(result.error)
+    }
+  } catch (err) {
     bump(targetBlock)
+    errorReporter.report(err.message)
   }
 }
 
@@ -21,4 +25,10 @@ function checkType(block) {
 
 function checkParentConnection(block) {
   block.getParent() && checkType(block)
+}
+
+const errorReporter = {
+  report: function (error) {
+    $.notify(error, { autoHide: false })
+  }
 }

@@ -265,14 +265,14 @@ function constraints(block) {
   return constraints
 }
 
-function typeVariables(functionBlock) {
-  const result = solveConstraints({ constraints: constraints(functionBlock), typeDictionary: {} })
+function blockConstraints(functionBlock) {
+  return solveConstraints({ constraints: constraints(functionBlock), typeDictionary: {} })
+}
 
-  if (result.typeDictionary) {
-    return result.typeDictionary
-  } else {
-    throw new Error(result.error)
-  }
+function typeVariables(functionBlock) {
+  const result = blockConstraints(functionBlock)
+  if (result.error) throw new Error(result.error)
+  return result.typeDictionary
 }
 
 function getInputType(input) {
