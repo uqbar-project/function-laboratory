@@ -60,6 +60,22 @@ const newFunction = (workspace, type, ...args) => {
   return block
 }
 
+const newValue = (workspace, value) => {
+  switch (typeof(value)) {
+    case "number":
+      return newNumber(workspace, value);
+  
+    case "boolean":
+      return newBoolean(workspace, value);
+
+    case "string":
+      return newString(workspace, value);
+
+    default:
+      break;
+  }
+}
+
 const newBoolean = (workspace, value) =>
   newBlockWithFields(workspace, "logic_boolean", { "BOOL": value ? "TRUE" : "FALSE" })
 

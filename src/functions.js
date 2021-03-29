@@ -63,6 +63,9 @@ function buildFuctionBlockWith(name, functionType, cb) {
         reduceBlock(this)(result.block)
       }
     },
+    getValue() {
+      return withReducedBlockDo(this, (reducedBlock) => reducedBlock.getValue())
+    },
     generateContextMenu: function () {
       return [{
         text: "Reducir",
@@ -142,28 +145,43 @@ const argBlock = (block, arg = 0) => {
 const allArgBlocks = block =>
   Array(block.inputList.length).fill().map((_, i) => argBlock(block, i))
 
-const resultFieldValue = (block, field) => {
-  const reduction = block.getReduction().block
-  const value = reduction.getFieldValue(field)
-  if (reduction != block) { reduction.dispose() } // Dispose intermediate result blocks
-  return value
-}
+const resultFieldValue = (block, field) =>
+  withReducedBlockDo(block, (reducedBlock) => reducedBlock.getFieldValue(field))
 
+const withReducedBlockDo = (expandedBlock, action) => {
+  const reducedBlock = expandedBlock.getReduction().block
+
+  const result = action(reducedBlock)
+
+  if (reducedBlock != expandedBlock) { reducedBlock.dispose() } // Dispose intermediate result blocks
+
+  return result
+}
 
 buildFuctionBlock({
   name: "even",
   type: ["Number", "Boolean"],
   getResultBlock: function (arg) {
-    const result = resultFieldValue(arg, "NUM") % 2 == 0
-    return { block: newBoolean(this.workspace, result) }
+    const reduceFunction = (n) => n % 2 == 0;
+
+    const value = arg.getValue();
+
+    const result = reduceFunction(value);
+
+    return { block: newValue(this.workspace, result) }
   }
 })
 buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
   getResultBlock: function (arg) {
-    const result = !getBooleanValue(arg)
-    return { block: newBoolean(this.workspace, result) }
+    const reduceFunction = (bool) => !bool;
+
+    const value = arg.getValue();
+
+    const result = reduceFunction(value);
+
+    return { block: newValue(this.workspace, result) }
   }
 })
 buildFuctionBlock({
@@ -309,16 +327,22 @@ Blockly.Blocks["math_arithmetic"].onchange = function (event) {
   onChangeFunction.bind(this)(event)
 }
 
-function decorateValueBlock(name, type) {
+function decorateValueBlock(name, type, getValue) {
   Blockly.Blocks[name].onchange = function (event) { onChangeValue.bind(this)(event) }
   Blockly.Blocks[name].outputType = createType(type)
   decorateInit(Blockly.Blocks[name], function () {
     this.getResultBlock = getResultBlockDefault
     this.getReduction = getResultBlockDefault
+    this.getValue = getValue(this)
   })
 }
 
-decorateValueBlock("math_number", "Number")
-decorateValueBlock("text", "String")
-decorateValueBlock("logic_boolean", "Boolean")
+decorateValueBlock("math_number", "Number", (block) => () => resultFieldValue(block, "NUM"))
+decorateValueBlock("text", "String", (block) => () => {})
+decorateValueBlock("logic_boolean", "Boolean", (block) => () => {
+  const valueName = resultFieldValue(block, "BOOL");
+  if(valueName == "TRUE") { return true };
+  if(valueName == "FALSE") { return false };
+  throw new Error("Booleano inicializado con un valor invalido");
+})
 
