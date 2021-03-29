@@ -100,7 +100,7 @@ const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], get
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-    if(name != "charAt") {
+    if(name != "charAt" && name != "length" && name != "not") {
       block.getResultBlock = getResultBlock
     }
   })
@@ -191,28 +191,12 @@ buildFuctionBlock({
 buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
-  getResultBlock: function (arg) {
-    const reduceFunction = (bool) => !bool;
-
-    const value = arg.getValue();
-
-    const result = reduceFunction(value);
-
-    return { block: newValue(this.workspace, result) }
-  }
+  evaluation: (bool) => !bool
 })
 buildFuctionBlock({
   name: "length",
   type: ["String", "Number"],
-  getResultBlock: function (arg) {
-    const reduceFunction = (string) => string.length;
-
-    const value = arg.getValue();
-
-    const result = reduceFunction(value);
-
-    return { block: newValue(this.workspace, result) }
-  }
+  evaluation: (string) => string.length
 })//TODO: List(Char)
 buildFuctionBlock({
   name: "charAt",
