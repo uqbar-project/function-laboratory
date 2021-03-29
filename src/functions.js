@@ -188,21 +188,37 @@ buildFuctionBlock({
   name: "length",
   type: ["String", "Number"],
   getResultBlock: function (arg) {
-    const result = resultFieldValue(arg, "TEXT").length
-    return { block: newNumber(this.workspace, result) }
+    const reduceFunction = (string) => string.length;
+
+    const value = arg.getValue();
+
+    const result = reduceFunction(value);
+
+    return { block: newValue(this.workspace, result) }
   }
 })//TODO: List(Char)
 buildFuctionBlock({
   name: "charAt",
   type: ["Number", "String", "String"],
   getResultBlock: function (arg0, arg1) {
-    const position = resultFieldValue(arg0, "NUM")
-    const string = resultFieldValue(arg1, "TEXT")
-    const result = string[position]
-    if (result != null) {
-      return { block: newString(this.workspace, result) }
-    } else {
-      return ({ error: "Posición fuera de límites" })
+    const reduceFunction = (position) => (string) => {
+      const char = string[position];
+      if(char == null) { throw new Error("Posición fuera de límites") }
+      return char;
+    }
+
+    const position = arg0.getValue();
+    const string = arg1.getValue();
+
+    try {
+      const result = reduceFunction(position)(string);
+      return { block: newValue(this.workspace, result) }
+    } catch (error) {
+      if(error instanceof Error) {
+        return ({ error: error.message });
+      } else {
+        throw error;
+      }
     }
   }
 })
@@ -338,7 +354,7 @@ function decorateValueBlock(name, type, getValue) {
 }
 
 decorateValueBlock("math_number", "Number", (block) => () => resultFieldValue(block, "NUM"))
-decorateValueBlock("text", "String", (block) => () => {})
+decorateValueBlock("text", "String", (block) => () => resultFieldValue(block, "TEXT"))
 decorateValueBlock("logic_boolean", "Boolean", (block) => () => {
   const valueName = resultFieldValue(block, "BOOL");
   if(valueName == "TRUE") { return true };
