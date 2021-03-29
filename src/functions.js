@@ -55,6 +55,20 @@ function buildFuctionBlockWith(name, functionType, cb) {
         .map((_, i) => argBlock(this, i) || stackArgs.pop())
       return this.getResultBlock(...allArgs)
     },
+    getResultBlock: function (...blocks) {
+      const valueArgs = blocks.map(block => block.getValue());
+  
+      try {
+        const result = this.evaluation(...valueArgs);
+        return { block: newValue(this.workspace, result) }
+      } catch (error) {
+        if(error instanceof Error) {
+          return ({ error: error.message });
+        } else {
+          throw error;
+        }
+      }
+    },
     reduce() {
       const result = this.getReduction()
       if (result.error) {
@@ -78,14 +92,17 @@ function buildFuctionBlockWith(name, functionType, cb) {
 
 const getResultBlockDefault = function () { return { block: this } }
 
-const buildFuctionBlock = ({ name, type, fields = [], getResultBlock = getResultBlockDefault }) =>
+const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], getResultBlock = getResultBlockDefault }) =>
   buildFuctionBlockWith(name, type, block => {
+    block.evaluation = evaluation
     block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
     for (let index = 1; index < type.length - 1; index++) {
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-    block.getResultBlock = getResultBlock
+    if(name != "charAt") {
+      block.getResultBlock = getResultBlock
+    }
   })
 
 const buildInfixFuctionBlock = ([name, field], functionType) =>
@@ -200,26 +217,10 @@ buildFuctionBlock({
 buildFuctionBlock({
   name: "charAt",
   type: ["Number", "String", "String"],
-  getResultBlock: function (arg0, arg1) {
-    const reduceFunction = (position) => (string) => {
-      const char = string[position];
-      if(char == null) { throw new Error("Posición fuera de límites") }
-      return char;
-    }
-
-    const position = arg0.getValue();
-    const string = arg1.getValue();
-
-    try {
-      const result = reduceFunction(position)(string);
-      return { block: newValue(this.workspace, result) }
-    } catch (error) {
-      if(error instanceof Error) {
-        return ({ error: error.message });
-      } else {
-        throw error;
-      }
-    }
+  evaluation: (position, string) => {
+    const char = string[position];
+    if(char == null) { throw new Error("Posición fuera de límites") }
+    return char;
   }
 })
 
