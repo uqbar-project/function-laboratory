@@ -100,7 +100,7 @@ const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], get
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-    if(name != "charAt" && name != "length" && name != "not") {
+    if(name != "charAt" && name != "length" && name != "not" && name != "even") {
       block.getResultBlock = getResultBlock
     }
   })
@@ -178,15 +178,7 @@ const withReducedBlockDo = (expandedBlock, action) => {
 buildFuctionBlock({
   name: "even",
   type: ["Number", "Boolean"],
-  getResultBlock: function (arg) {
-    const reduceFunction = (n) => n % 2 == 0;
-
-    const value = arg.getValue();
-
-    const result = reduceFunction(value);
-
-    return { block: newValue(this.workspace, result) }
-  }
+  evaluation: (n) => n % 2 == 0
 })
 buildFuctionBlock({
   name: "not",
