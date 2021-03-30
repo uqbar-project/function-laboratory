@@ -53,13 +53,15 @@ function buildFuctionBlockWith(name, functionType, cb) {
       const stackArgs = args.reverse()
       const allArgs = Array(paramCount).fill()
         .map((_, i) => argBlock(this, i) || stackArgs.pop())
+        .filter(argBlock => argBlock !== undefined)
       return this.getResultBlock(...allArgs)
     },
     getResultBlock: function (...blocks) {
+      if(blocks.length === 0) { return { block: this } };
       const valueArgs = blocks.map(block => block.getValue());
   
       try {
-        const result = this.evaluation(...valueArgs);
+        const result = valueArgs.reduce((f, x) => f(x), this.evaluation);
         return { block: newValue(this.workspace, result) }
       } catch (error) {
         if(error instanceof Error) {
@@ -70,6 +72,9 @@ function buildFuctionBlockWith(name, functionType, cb) {
       }
     },
     reduce() {
+      if(blockType(this).isFunctionType()) {
+        throw new Error("Falta aplicar parametros para reducir esta expresion")
+      }
       const result = this.getReduction()
       if (result.error) {
         errorReporter.report(result.error)
@@ -78,7 +83,18 @@ function buildFuctionBlockWith(name, functionType, cb) {
       }
     },
     getValue() {
-      return withReducedBlockDo(this, (reducedBlock) => reducedBlock.getValue())
+      const paramCount = this.inputList.filter(isBlockInput).length
+      const allArgs = Array(paramCount).fill()
+        .map((_, i) => argBlock(this, i))
+        .filter(argBlock => argBlock !== undefined)
+      if(allArgs.every(x => x == null)) { return this.evaluation };
+      if(allArgs.length === 0) { return this.evaluation };
+      const valueArgs = allArgs.map(arg => arg && arg.getValue());
+      const result = valueArgs.reduce((f, x) => {
+        return (x == null) ? flip(f) : f(x)
+      },
+        this.evaluation);
+      return result;
     },
     generateContextMenu: function () {
       return [{
@@ -90,6 +106,8 @@ function buildFuctionBlockWith(name, functionType, cb) {
   }
 }
 
+const flip = f => x => y => f(y)(x)
+
 const getResultBlockDefault = function () { return { block: this } }
 
 const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], getResultBlock = getResultBlockDefault }) =>
@@ -100,7 +118,7 @@ const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], get
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-    if(name != "charAt" && name != "length" && name != "not" && name != "even") {
+    if(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition") {
       block.getResultBlock = getResultBlock
     }
   })
@@ -193,7 +211,7 @@ buildFuctionBlock({
 buildFuctionBlock({
   name: "charAt",
   type: ["Number", "String", "String"],
-  evaluation: (position, string) => {
+  evaluation: (position) => (string) => {
     const char = string[position];
     if(char == null) { throw new Error("Posición fuera de límites") }
     return char;
@@ -214,11 +232,8 @@ buildFuctionBlock({
   name: "composition",
   type: [["b", "c"], ["a", "b"], "a", "c"],
   fields: ["", ".", "$"],
-  getResultBlock: function (f2, f1, value) {
-    const innerResult = f1.getReduction(value).block
-    const result = f2.getReduction(innerResult)
-    innerResult.dispose() // Dispose intermediate result blocks
-    return result
+  evaluation: (f2) => (f1) => (value) => {
+    return f2(f1(value))
   }
 })
 
