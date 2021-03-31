@@ -172,6 +172,30 @@ describe('Reducing expressions', () => {
       })
     })
 
+    describe('fold', () => {
+      onWorkspace('reduction works', workspace => {
+        const numbers = newList(workspace, [1, 2, 3].map(n => newNumber(workspace, n)))
+        const zero = newNumber(workspace, 0)
+        const add = newBlockWithFields(workspace, "math_arithmetic", { "OP": "ADD" })
+        const sumOfOneTwoAndThree = newFunction(workspace, 'fold', add, zero, numbers)
+
+        assertEqualReductionBlock(sumOfOneTwoAndThree, newNumber(workspace, 6))
+      })
+    })
+
+    describe('convoluted example with multiple parameters and partial application', () => {
+      onWorkspace('reduction works', workspace => {
+        const numbers = newList(workspace, [1, 2, 3].map(n => newNumber(workspace, n)))
+        const zero = newNumber(workspace, 0)
+        const fold = newFunction(workspace, 'fold', undefined, undefined, numbers)
+        const id = newFunction(workspace, 'id')
+        const add = newBlockWithFields(workspace, "math_arithmetic", { "OP": "ADD" })
+        const composition = newFunction(workspace, 'composition', fold, id, add)
+        const application = newFunction(workspace, 'apply', composition, zero)
+
+        assertEqualReductionBlock(application, newNumber(workspace, 6))
+      })
+    })
   })
 })
 

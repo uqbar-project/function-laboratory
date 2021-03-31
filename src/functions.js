@@ -49,6 +49,17 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setHelpUrl("")
     },
     getReduction(...args) {
+      if(!(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold")) {
+        try {
+          return { block: newValue(this.workspace, this.getValue()) }
+        } catch (error) {
+          if(error instanceof Error) {
+            return ({ error: error.message });
+          } else {
+            throw error;
+          }
+        }
+      }
       const paramCount = this.inputList.filter(isBlockInput).length
       const stackArgs = args.reverse()
       const allArgs = Array(paramCount).fill()
@@ -84,16 +95,12 @@ function buildFuctionBlockWith(name, functionType, cb) {
     },
     getValue() {
       const paramCount = this.inputList.filter(isBlockInput).length
-      const allArgs = Array(paramCount).fill()
+      const args = Array(paramCount).fill()
         .map((_, i) => argBlock(this, i))
+        .map(x => x === null ? ___ : x.getValue())
         .filter(argBlock => argBlock !== undefined)
-      if(allArgs.every(x => x == null)) { return this.evaluation };
-      if(allArgs.length === 0) { return this.evaluation };
-      const valueArgs = allArgs.map(arg => arg && arg.getValue());
-      const result = valueArgs.reduce((f, x) => {
-        return (x == null) ? flip(f) : f(x)
-      },
-        this.evaluation);
+
+      const result = partialApply(...args)(this.evaluation)
       return result;
     },
     generateContextMenu: function () {
@@ -118,15 +125,15 @@ const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], get
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-    if(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition") {
+    if(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold") {
       block.getResultBlock = getResultBlock
     }
   })
 
 const buildInfixFuctionBlock = ([name, field], functionType) =>
   buildFuctionBlockWith(name, functionType, block => {
-    block.appendValueInput("LEFT")
-    block.appendValueInput("RIGHT")
+    block.appendValueInput("ARG0")
+    block.appendValueInput("ARG1")
       .appendField(field)
   })
 
@@ -221,9 +228,14 @@ buildFuctionBlock({
 buildInfixFuctionBlock(["compare", ">"], ["a", "a", "Boolean"])//TODO: Selector
 buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 
+decorateInit(Blockly.Blocks["apply"], function () {
+  this.evaluation = (f) => (x) => f(x)
+})
+
 buildFuctionBlock({
   name: "id",
   type: ["a", "a"],
+  evaluation: (x) => x,
   getResultBlock: function (arg) {
     return { block: copyBlock(this.workspace, arg) }
   }
@@ -242,12 +254,7 @@ buildFuctionBlock({
   name: "any",
   type: [["a", "Boolean"], newListType("a"), "Boolean"],
   getResultBlock: function (condition, list) {
-    const result = allListElements(list).some(e => {
-      const booleanBlock = condition.getReduction(e).block
-      const bul = getBooleanValue(booleanBlock)
-      booleanBlock.dispose() // Dispose intermediate result blocks
-      return bul
-    })
+    const result = allListElements(list).some(e => condition.getValue()(e))
     return { block: newBoolean(this.workspace, result) }
   }
 })
@@ -265,7 +272,7 @@ buildFuctionBlock({
   name: "map",
   type: [["a", "b"], newListType("a"), newListType("b")],
   getResultBlock: function (transform, list) {
-    const result = allListElements(list).map(e => transform.getReduction(e).block)
+    const result = allListElements(list).map(e => transform.getValue()(e.getValue()))
     return { block: newList(this.workspace, result) }
   }
 })
@@ -279,7 +286,8 @@ buildFuctionBlock({
 })
 buildFuctionBlock({
   name: "fold",
-  type: [["a", "b", "a"], "a", newListType("b"), "a"]
+  type: [["a", "b", "a"], "a", newListType("b"), "a"],
+  evaluation: (f) => (seed) => (list) => list.reduce((x, y) => f(x)(y), seed)
 })
 
 Blockly.Blocks['list'] = {
@@ -295,6 +303,9 @@ Blockly.Blocks['list'] = {
     this.setOnChange(function (event) { onChangeList.bind(this)(event) })
     this.outputType = new ListType(createType("a"))
     this.inputIndex = 1
+    this.getValue = () => this.getChildren().map(element => element.getValue())
+    this.getResultBlock = getResultBlockDefault
+    this.getReduction = getResultBlockDefault
   },
 
   /**
@@ -334,6 +345,25 @@ Blockly.Blocks["math_arithmetic"].onchange = function (event) {
   setFunctionType(this, "Number", "Number", "Number")
   onChangeFunction.bind(this)(event)
 }
+
+decorateInit(Blockly.Blocks["math_arithmetic"], function () {
+  this.getResultBlock = getResultBlockDefault
+  this.getReduction = getResultBlockDefault
+  this.getValue = () => {
+    const op = ({
+      "ADD": x => y => x + y,
+      "MINUS": x => y => x - y,
+      "MULTIPLY": x => y => x * y,
+      "DIVIDE": x => y => x / y,
+      "POWER": x => y => Math.pow(x, y),
+    })[this.getField("OP").getValue()]
+    var a = this.getInput("A").connection.targetBlock() && this.getInput("A").connection.targetBlock().getValue()
+    var b = this.getInput("B").connection.targetBlock() && this.getInput("B").connection.targetBlock().getValue()
+    if (a == null) { a = ___ }
+    if (b == null) { b = ___ }
+    return partialApply(a, b)(op)
+  }
+})
 
 function decorateValueBlock(name, type, getValue) {
   Blockly.Blocks[name].onchange = function (event) { onChangeValue.bind(this)(event) }
