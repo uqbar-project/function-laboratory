@@ -266,7 +266,11 @@ function constraints(block) {
 }
 
 function blockConstraints(functionBlock) {
-  return solveConstraints({ constraints: constraints(functionBlock), typeDictionary: {} })
+  try {
+    return solveConstraints({ constraints: constraints(functionBlock), typeDictionary: {} })
+  } catch(error) {
+    return { error: error.message }
+  }
 }
 
 function typeVariables(functionBlock) {
