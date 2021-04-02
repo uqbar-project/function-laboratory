@@ -49,7 +49,7 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setHelpUrl("")
     },
     getReduction(...args) {
-      if(!(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold")) {
+      if(!(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold" && name != "map")) {
         try {
           return { block: newValue(this.workspace, this.getValue()) }
         } catch (error) {
@@ -125,7 +125,7 @@ const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], get
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-    if(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold") {
+    if(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold" && name != "map") {
       block.getResultBlock = getResultBlock
     }
   })
@@ -272,10 +272,7 @@ buildFuctionBlock({
 buildFuctionBlock({
   name: "map",
   type: [["a", "b"], newListType("a"), newListType("b")],
-  getResultBlock: function (transform, list) {
-    const result = allListElements(list).map(e => transform.getValue()(e.getValue()))
-    return { block: newList(this.workspace, result) }
-  }
+  evaluation: (f) => (list) => list.map(f)
 })
 buildFuctionBlock({
   name: "maximum",
@@ -343,11 +340,11 @@ Blockly.Blocks['list'] = {
 
 
 Blockly.Blocks["math_arithmetic"].onchange = function (event) {
-  setFunctionType(this, "Number", "Number", "Number")
   onChangeFunction.bind(this)(event)
 }
 
 decorateInit(Blockly.Blocks["math_arithmetic"], function () {
+  setFunctionType(this, "Number", "Number", "Number")
   this.getResultBlock = getResultBlockDefault
   this.getReduction = getResultBlockDefault
   this.getValue = () => {

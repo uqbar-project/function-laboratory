@@ -61,6 +61,9 @@ const newFunction = (workspace, type, ...args) => {
 }
 
 const newValue = (workspace, value) => {
+  if(Array.isArray(value)) {
+    return newList(workspace, value.map(element => newValue(workspace, element)))
+  };
   switch (typeof(value)) {
     case "number":
       return newNumber(workspace, value);

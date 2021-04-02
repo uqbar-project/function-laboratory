@@ -66,36 +66,36 @@ describe('Reducing expressions', () => {
     describe('even', () => {
       onWorkspace('When it is applied an even number it reduces to true', workspace => {
         const even0 = newFunction(workspace, 'even', newNumber(workspace, 0))
-        assertEqualReductionBlock(even0, newBoolean(workspace, true))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(even0, newBoolean(workspace, true))
       })
 
       onWorkspace('When it applied an odd number it reduces to false', workspace => {
         const even1 = newFunction(workspace, 'even', newNumber(workspace, 1))
-        assertEqualReductionBlock(even1, newBoolean(workspace, false))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(even1, newBoolean(workspace, false))
       })
     })
 
     describe('not', () => {
       onWorkspace('When it is applied true it reduces to false', workspace => {
         const notTrue = newFunction(workspace, 'not', newBoolean(workspace, true))
-        assertEqualReductionBlock(notTrue, newBoolean(workspace, false))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(notTrue, newBoolean(workspace, false))
       })
 
       onWorkspace('When it is applied false it reduces to true', workspace => {
         const notFalse = newFunction(workspace, 'not', newBoolean(workspace, false))
-        assertEqualReductionBlock(notFalse, newBoolean(workspace, true))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(notFalse, newBoolean(workspace, true))
       })
     })
 
     describe('length', () => {
       onWorkspace('when it is applied an empty string it reduces to 0', workspace => {
         const lengthEmpty = newFunction(workspace, 'length', newString(workspace, ""))
-        assertEqualReductionBlock(lengthEmpty, newNumber(workspace, 0))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(lengthEmpty, newNumber(workspace, 0))
       })
 
       onWorkspace('when it is applied a string it reduces to the amount of characters in the string', workspace => {
         const lengthHelloWorld = newFunction(workspace, 'length', newString(workspace, "Hello World!"))
-        assertEqualReductionBlock(lengthHelloWorld, newNumber(workspace, 12))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(lengthHelloWorld, newNumber(workspace, 12))
       })
     })
 
@@ -104,7 +104,7 @@ describe('Reducing expressions', () => {
         const charAt0Hello = newFunction(workspace, 'charAt',
           newNumber(workspace, 0), newString(workspace, "Hello")
         )
-        assertEqualReductionBlock(charAt0Hello, newString(workspace, "H"))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(charAt0Hello, newString(workspace, "H"))
       })
 
       onWorkspace("when it is passed an invalid position of an string and a string, it fails without reducing anything", workspace => {
@@ -123,7 +123,7 @@ describe('Reducing expressions', () => {
     describe('id', () => {
       onWorkspace('when it is applied any paramter it reduces to that parameter', workspace => {
         const id0 = newFunction(workspace, 'id', newNumber(workspace, 0))
-        assertEqualReductionBlock(id0, newNumber(workspace, 0))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(id0, newNumber(workspace, 0))
       })
     })
 
@@ -132,7 +132,7 @@ describe('Reducing expressions', () => {
         const odd0 = newFunction(workspace, 'composition',
           newFunction(workspace, 'not'), newFunction(workspace, 'even'), newNumber(workspace, 0)
         )
-        assertEqualReductionBlock(odd0, newBoolean(workspace, false))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(odd0, newBoolean(workspace, false))
       })
     })
 
@@ -141,7 +141,7 @@ describe('Reducing expressions', () => {
         const anyEvenEmpty = newFunction(workspace, 'any',
           newFunction(workspace, 'even'), newList(workspace, [])
         )
-        assertEqualReductionBlock(anyEvenEmpty, newBoolean(workspace, false))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(anyEvenEmpty, newBoolean(workspace, false))
       })
 
       onWorkspace('When any element apply', workspace => {
@@ -149,7 +149,7 @@ describe('Reducing expressions', () => {
         const anyEven12 = newFunction(workspace, 'any',
           newFunction(workspace, 'even'), newList(workspace, numbers)
         )
-        assertEqualReductionBlock(anyEven12, newBoolean(workspace, true))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(anyEven12, newBoolean(workspace, true))
       })
 
       onWorkspace('When no element apply', workspace => {
@@ -157,7 +157,7 @@ describe('Reducing expressions', () => {
         const anyEven13 = newFunction(workspace, 'any',
           newFunction(workspace, 'even'), newList(workspace, numbers)
         )
-        assertEqualReductionBlock(anyEven13, newBoolean(workspace, false))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(anyEven13, newBoolean(workspace, false))
       })
     })
 
@@ -168,7 +168,11 @@ describe('Reducing expressions', () => {
         const mapLengthWords = newFunction(workspace, 'map',
           newFunction(workspace, 'length'), newList(workspace, words)
         )
-        assertEqualReductionBlock(mapLengthWords, newList(workspace, numbers))
+        const expectedList = newList(workspace, numbers)
+
+        debugger
+
+        assertThatBlockReducesAndThenExpandsBackCorrectly(mapLengthWords, expectedList)
       })
     })
 
@@ -179,11 +183,11 @@ describe('Reducing expressions', () => {
         const add = newBlockWithFields(workspace, "math_arithmetic", { "OP": "ADD" })
         const sumOfOneTwoAndThree = newFunction(workspace, 'fold', add, zero, numbers)
 
-        assertEqualReductionBlock(sumOfOneTwoAndThree, newNumber(workspace, 6))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(sumOfOneTwoAndThree, newNumber(workspace, 6))
       })
     })
 
-    describe('convoluted example with multiple parameters and partial application', () => {
+    describe('when using partially applied functions of several parameters', () => {
       onWorkspace('reduction works', workspace => {
         const numbers = newList(workspace, [1, 2, 3].map(n => newNumber(workspace, n)))
         const zero = newNumber(workspace, 0)
@@ -193,7 +197,7 @@ describe('Reducing expressions', () => {
         const composition = newFunction(workspace, 'composition', fold, id, add)
         const application = newFunction(workspace, 'apply', composition, zero)
 
-        assertEqualReductionBlock(application, newNumber(workspace, 6))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(application, newNumber(workspace, 6))
       })
     })
   })
@@ -209,8 +213,27 @@ const assertAnyBlockInWorkspaceSatisfies = (workspace, condition) => {
 const assertEqualBlocksInWorkspace = (workspace, expectedBlock) =>
   assertEqualBlocks(workspace.getTopBlocks()[0], expectedBlock)
 
-const assertEqualReductionBlock = (block, expectedBlock) =>
-  assertEqualBlocks(block.getReduction().block, expectedBlock)
+const assertThatBlockReducesAndThenExpandsBackCorrectly = (block, expectedBlock) => {
+  const workspace = block.workspace
+  const originalType = blockType(block)
+  const originalColor = block.getColour()
+
+  block.reduce()
+  forceBlocklyEvents()
+
+  const reducedBlock = getLastTopBlock(workspace)
+  assertEqualBlocks(reducedBlock, expectedBlock)
+  assertBlockKeepsItsPropertiesWhenExpandedBack(workspace, reducedBlock, originalType, originalColor)
+}
+
+const assertBlockKeepsItsPropertiesWhenExpandedBack = (workspace, reducedBlock, originalType, originalColor) => {
+  reducedBlock.expand()
+  forceBlocklyEvents()
+
+  const expandedBlock = getLastTopBlock(workspace)
+  assert.equal(expandedBlock.getColour(), originalColor)
+  assertType(expandedBlock, originalType)
+}
 
 const assertEqualBlocks = (block, expectedBlock) => {
   assert.equal(block.type, expectedBlock.type)
@@ -226,3 +249,5 @@ const assertEqualBlocks = (block, expectedBlock) => {
     expectedBlock.getChildren()
   ).forEach(([block, expectedBlock]) => assertEqualBlocks(block, expectedBlock))
 }
+
+const getLastTopBlock = (workspace) => workspace.getTopBlocks().pop()
