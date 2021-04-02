@@ -97,9 +97,6 @@ const newList = (workspace, elementBlocks) => {
   return list
 }
 
-// INTERPRETER
-const getBooleanValue = block => resultFieldValue(block, "BOOL") == "TRUE"
-
 // LIST
 const isOrganizedList = block =>
   block.inputList.filter(isEmptyBlockInput).length === 1 &&

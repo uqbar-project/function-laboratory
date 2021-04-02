@@ -28,7 +28,7 @@ function checkParentConnection(block) {
 }
 
 const errorReporter = {
-  report: function (error) {
-    $.notify(error, { autoHide: false })
+  report: function (errorMessage) {
+    $.notify(errorMessage, { autoHide: false })
   }
 }
