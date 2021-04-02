@@ -49,31 +49,8 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setHelpUrl("")
     },
     getReduction(...args) {
-      if(!(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold" && name != "map")) {
-        try {
-          return { block: newValue(this.workspace, this.getValue()) }
-        } catch (error) {
-          if(error instanceof Error) {
-            return ({ error: error.message });
-          } else {
-            throw error;
-          }
-        }
-      }
-      const paramCount = this.inputList.filter(isBlockInput).length
-      const stackArgs = args.reverse()
-      const allArgs = Array(paramCount).fill()
-        .map((_, i) => argBlock(this, i) || stackArgs.pop())
-        .filter(argBlock => argBlock !== undefined)
-      return this.getResultBlock(...allArgs)
-    },
-    getResultBlock: function (...blocks) {
-      if(blocks.length === 0) { return { block: this } };
-      const valueArgs = blocks.map(block => block.getValue());
-  
       try {
-        const result = valueArgs.reduce((f, x) => f(x), this.evaluation);
-        return { block: newValue(this.workspace, result) }
+        return { block: newValue(this.workspace, this.getValue()) }
       } catch (error) {
         if(error instanceof Error) {
           return ({ error: error.message });
@@ -107,7 +84,7 @@ function buildFuctionBlockWith(name, functionType, cb) {
       return [{
         text: "Reducir",
         callback: this.reduce.bind(this),
-        enabled: !blockType(this).isFunctionType() && this.getResultBlock,
+        enabled: !blockType(this).isFunctionType() && this.evaluation,
       }, ...this.__proto__.generateContextMenu.bind(this)()]
     }
   }
@@ -117,16 +94,13 @@ const flip = f => x => y => f(y)(x)
 
 const getResultBlockDefault = function () { return { block: this } }
 
-const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [], getResultBlock = getResultBlockDefault }) =>
+const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [] }) =>
   buildFuctionBlockWith(name, type, block => {
     block.evaluation = evaluation
     block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
     for (let index = 1; index < type.length - 1; index++) {
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
-    }
-    if(name != "charAt" && name != "length" && name != "not" && name != "even" && name != "composition" && name != "fold" && name != "map") {
-      block.getResultBlock = getResultBlock
     }
   })
 
@@ -237,9 +211,6 @@ buildFuctionBlock({
   name: "id",
   type: ["a", "a"],
   evaluation: (x) => x,
-  getResultBlock: function (arg) {
-    return { block: copyBlock(this.workspace, arg) }
-  }
 })
 buildFuctionBlock({
   name: "composition",
@@ -254,10 +225,7 @@ buildInfixFuctionBlock(["at", "!!"], [newListType("a"), "Number", "a"])
 buildFuctionBlock({
   name: "any",
   type: [["a", "Boolean"], newListType("a"), "Boolean"],
-  getResultBlock: function (condition, list) {
-    const result = allListElements(list).some(e => condition.getValue()(e))
-    return { block: newBoolean(this.workspace, result) }
-  }
+  evaluation: (condition) => (list) => list.some(condition)
 })
 buildFuctionBlock({
   name: "all",
@@ -302,7 +270,6 @@ Blockly.Blocks['list'] = {
     this.outputType = new ListType(createType("a"))
     this.inputIndex = 1
     this.getValue = () => this.getChildren().map(element => element.getValue())
-    this.getResultBlock = getResultBlockDefault
     this.getReduction = getResultBlockDefault
   },
 
@@ -345,7 +312,6 @@ Blockly.Blocks["math_arithmetic"].onchange = function (event) {
 
 decorateInit(Blockly.Blocks["math_arithmetic"], function () {
   setFunctionType(this, "Number", "Number", "Number")
-  this.getResultBlock = getResultBlockDefault
   this.getReduction = getResultBlockDefault
   this.getValue = () => {
     const op = ({
@@ -367,7 +333,6 @@ function decorateValueBlock(name, type, getValue) {
   Blockly.Blocks[name].onchange = function (event) { onChangeValue.bind(this)(event) }
   Blockly.Blocks[name].outputType = createType(type)
   decorateInit(Blockly.Blocks[name], function () {
-    this.getResultBlock = getResultBlockDefault
     this.getReduction = getResultBlockDefault
     this.getValue = getValue(this)
   })
