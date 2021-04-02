@@ -1,5 +1,5 @@
 function onChangeBlock(event) {
-  if (event.blockId == this.id) {
+  if (event.blockId == this.id && !this.workspace.isDragging()) {
     checkParentConnection(this)
   }
   if (!blockConstraints(this).error) {
