@@ -150,15 +150,16 @@ const reduceBlock = expandedBlock => reducedBlock => {
   // Result blocks are not editable
   reducedBlock.setEditable(false)
   reducedBlock.getChildren().forEach(child => child.setEditable(false))
+  reducedBlock.expand = function () {
+    const restoredOldBlock = Blockly.Xml.domToBlock(expandedBlockAsXml, reducedBlock.workspace)
+    replace(reducedBlock)(restoredOldBlock)
+  }
 
   expandedBlockAsXml = Blockly.Xml.blockToDom(expandedBlock)
   reducedBlock.generateContextMenu = function () {
     return [{
       text: "Expandir",
-      callback: function () {
-        const restoredOldBlock = Blockly.Xml.domToBlock(expandedBlockAsXml, reducedBlock.workspace)
-        replace(reducedBlock)(restoredOldBlock)
-      },
+      callback: reducedBlock.expand,
       enabled: true
     }, ...reducedBlock.__proto__.generateContextMenu.bind(this)()]
   }
