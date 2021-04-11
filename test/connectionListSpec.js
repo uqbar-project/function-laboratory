@@ -30,7 +30,7 @@ describe('List connections', () => {
     assertConnection(list, text2)
   })
 
-  onWorkspace('should reject other tipe elements', workspace => {
+  onWorkspace('should reject other type elements', workspace => {
     const list = workspace.newBlock('list')
     const text = workspace.newBlock('text')
     const number = workspace.newBlock('math_number')
@@ -38,6 +38,21 @@ describe('List connections', () => {
     connect(list, text, 0)
     connect(list, number, 1)
 
+    assertConnection(list, text)
+    assertRejectedConnection(list, number)
+  })
+
+  onWorkspace('should reject other type elements even when the list is a parameter on another block', workspace => {
+    const any = workspace.newBlock('any')
+    const list = workspace.newBlock('list')
+    const text = workspace.newBlock('text')
+    const number = workspace.newBlock('math_number')
+
+    connect(any, list, 1)
+    connect(list, text, 0)
+    connect(list, number, 1)
+
+    assertConnection(any, list)
     assertConnection(list, text)
     assertRejectedConnection(list, number)
   })
