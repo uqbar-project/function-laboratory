@@ -171,8 +171,6 @@ describe('Reducing expressions', () => {
         )
         const expectedList = listToBlock(workspace, numbers)
 
-        debugger
-
         assertThatBlockReducesAndThenExpandsBackCorrectly(mapLengthWords, expectedList)
       })
     })
