@@ -78,14 +78,14 @@ function buildFuctionBlockWith(name, functionType, cb) {
         .map(x => x === null ? ___ : x.getValue())
         .filter(argBlock => argBlock !== undefined)
 
-      const result = partialApply(...args)(this.evaluation)
+      const result = partialApply(...args)(this.compile)
       return result;
     },
     generateContextMenu: function () {
       return [{
         text: "Reducir",
         callback: this.reduce.bind(this),
-        enabled: !blockType(this).isFunctionType() && this.evaluation,
+        enabled: !blockType(this).isFunctionType() && this.compile,
       }, ...this.__proto__.generateContextMenu.bind(this)()]
     }
   }
@@ -113,9 +113,9 @@ const configureToExpandTo = reducedBlock => expandedBlock => {
   }
 }
 
-const buildFuctionBlock = ({ name, type, evaluation, fields = [] }) =>
+const buildFuctionBlock = ({ name, type, compile, fields = [] }) =>
   buildFuctionBlockWith(name, type, block => {
-    block.evaluation = evaluation
+    block.compile = compile
     block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
     for (let index = 1; index < type.length - 1; index++) {
       const inputName = fields[index] || ""
@@ -163,22 +163,22 @@ const allArgBlocks = block =>
 buildFuctionBlock({
   name: "even",
   type: ["Number", "Boolean"],
-  evaluation: (n) => n % 2 == 0
+  compile: (n) => n % 2 == 0
 })
 buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
-  evaluation: (bool) => !bool
+  compile: (bool) => !bool
 })
 buildFuctionBlock({
   name: "length",
   type: ["String", "Number"],
-  evaluation: (string) => string.length
+  compile: (string) => string.length
 })//TODO: List(Char)
 buildFuctionBlock({
   name: "charAt",
   type: ["Number", "String", "String"],
-  evaluation: (position) => (string) => {
+  compile: (position) => (string) => {
     const char = string[position];
     if(char == null) { throw new Error("Posición fuera de límites") }
     return char;
@@ -189,19 +189,19 @@ buildInfixFuctionBlock(["compare", ">"], ["a", "a", "Boolean"])//TODO: Selector
 buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 
 decorateInit(Blockly.Blocks["apply"], function () {
-  this.evaluation = (f) => (x) => f(x)
+  this.compile = (f) => (x) => f(x)
 })
 
 buildFuctionBlock({
   name: "id",
   type: ["a", "a"],
-  evaluation: (x) => x,
+  compile: (x) => x,
 })
 buildFuctionBlock({
   name: "composition",
   type: [["b", "c"], ["a", "b"], "a", "c"],
   fields: ["", ".", "$"],
-  evaluation: (f2) => (f1) => (value) => {
+  compile: (f2) => (f1) => (value) => {
     return f2(f1(value))
   }
 })
@@ -210,7 +210,7 @@ buildInfixFuctionBlock(["at", "!!"], [newListType("a"), "Number", "a"])
 buildFuctionBlock({
   name: "any",
   type: [["a", "Boolean"], newListType("a"), "Boolean"],
-  evaluation: (condition) => (list) => list.some(condition)
+  compile: (condition) => (list) => list.some(condition)
 })
 buildFuctionBlock({
   name: "all",
@@ -225,7 +225,7 @@ buildFuctionBlock({
 buildFuctionBlock({
   name: "map",
   type: [["a", "b"], newListType("a"), newListType("b")],
-  evaluation: (f) => (list) => list.map(f)
+  compile: (f) => (list) => list.map(f)
 })
 buildFuctionBlock({
   name: "maximum",
@@ -238,7 +238,7 @@ buildFuctionBlock({
 buildFuctionBlock({
   name: "fold",
   type: [["a", "b", "a"], "a", newListType("b"), "a"],
-  evaluation: (f) => (seed) => (list) => list.reduce((x, y) => f(x)(y), seed)
+  compile: (f) => (seed) => (list) => list.reduce((x, y) => f(x)(y), seed)
 })
 
 Blockly.Blocks['list'] = {
