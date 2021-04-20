@@ -113,7 +113,7 @@ const configureToExpandTo = reducedBlock => expandedBlock => {
   }
 }
 
-const buildFuctionBlock = ({ name, type, evaluation = () => {}, fields = [] }) =>
+const buildFuctionBlock = ({ name, type, evaluation, fields = [] }) =>
   buildFuctionBlockWith(name, type, block => {
     block.evaluation = evaluation
     block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
