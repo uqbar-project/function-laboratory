@@ -60,35 +60,35 @@ const newFunction = (workspace, type, ...args) => {
   return block
 }
 
-const newValue = (workspace, value) => {
+const valueToBlock = (workspace, value) => {
   if(Array.isArray(value)) {
-    return newList(workspace, value.map(element => newValue(workspace, element)))
+    return listToBlock(workspace, value.map(element => valueToBlock(workspace, element)))
   };
   switch (typeof(value)) {
     case "number":
-      return newNumber(workspace, value);
+      return numberToBlock(workspace, value);
   
     case "boolean":
-      return newBoolean(workspace, value);
+      return booleanToBlock(workspace, value);
 
     case "string":
-      return newString(workspace, value);
+      return stringToBlock(workspace, value);
 
     default:
       break;
   }
 }
 
-const newBoolean = (workspace, value) =>
+const booleanToBlock = (workspace, value) =>
   newBlockWithFields(workspace, "logic_boolean", { "BOOL": value ? "TRUE" : "FALSE" })
 
-const newNumber = (workspace, value) =>
+const numberToBlock = (workspace, value) =>
   newBlockWithFields(workspace, "math_number", { "NUM": value })
 
-const newString = (workspace, value) =>
+const stringToBlock = (workspace, value) =>
   newBlockWithFields(workspace, "text", { "TEXT": value })
 
-const newList = (workspace, elementBlocks) => {
+const listToBlock = (workspace, elementBlocks) => {
   const list = workspace.newBlock('list')
   elementBlocks.forEach((e, i) => {
     appendNewInputList(list)

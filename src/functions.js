@@ -64,7 +64,7 @@ function buildFuctionBlockWith(name, functionType, cb) {
       }
     },
     createReducedBlock() {
-      const reducedBlock = newValue(this.workspace, this.getValue())
+      const reducedBlock = valueToBlock(this.workspace, this.getValue())
       
       configureAsNonEditable(reducedBlock)
       configureToExpandTo(reducedBlock)(this)
