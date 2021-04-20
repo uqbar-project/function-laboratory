@@ -1,4 +1,4 @@
-const ___ = {}
+const ___ = Symbol("___")
 
 const partialApply = (...args) => (f) => {
     if(args.length === 0) { return f };
