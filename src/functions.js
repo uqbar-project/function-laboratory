@@ -49,10 +49,10 @@ function buildFuctionBlockWith(name, functionType, cb) {
       this.setHelpUrl("")
     },
     reduce() {
-      if(blockType(this).isFunctionType()) {
-        throw new Error("Falta aplicar parametros para reducir esta expresion")
-      }
       try {
+        if(blockType(this).isFunctionType()) {
+          throw new Error("Falta aplicar parametros para reducir esta expresion")
+        }
         const newBlock = this.createReducedBlock()
         replace(this)(newBlock)
       } catch (error) {

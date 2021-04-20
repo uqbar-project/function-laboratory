@@ -4,8 +4,9 @@ describe('Reducing expressions', () => {
   onWorkspace('reducing an unapplied function fails and keeps it in the workspace', workspace => {
     const even = workspace.newBlock('even')
 
-    assert.throws(() => even.reduce())
+    even.reduce()
 
+    assertErrorReported('Falta aplicar parametros para reducir esta expresion') 
     assertAnyBlockInWorkspaceSatisfies(workspace, ({ type }) => type == 'even')
   })
 
