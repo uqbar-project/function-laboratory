@@ -7,6 +7,7 @@
 <script src="dependencies/blockly/blockly_compressed.js"></script>
 <script src="dependencies/blockly/blocks_compressed.js"></script>
 <script src="dependencies/blockly/msg/js/es.js"></script>
+<script src="src/partialApply.js"></script>
 <script src="src/renaming.js"></script>
 <script src="src/constraintSolving.js"></script>
 <script src="src/typeSystem.js"></script>

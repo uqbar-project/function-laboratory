@@ -60,16 +60,35 @@ const newFunction = (workspace, type, ...args) => {
   return block
 }
 
-const newBoolean = (workspace, value) =>
+const valueToBlock = (workspace, value) => {
+  if(Array.isArray(value)) {
+    return listToBlock(workspace, value.map(element => valueToBlock(workspace, element)))
+  };
+  switch (typeof(value)) {
+    case "number":
+      return numberToBlock(workspace, value);
+  
+    case "boolean":
+      return booleanToBlock(workspace, value);
+
+    case "string":
+      return stringToBlock(workspace, value);
+
+    default:
+      break;
+  }
+}
+
+const booleanToBlock = (workspace, value) =>
   newBlockWithFields(workspace, "logic_boolean", { "BOOL": value ? "TRUE" : "FALSE" })
 
-const newNumber = (workspace, value) =>
+const numberToBlock = (workspace, value) =>
   newBlockWithFields(workspace, "math_number", { "NUM": value })
 
-const newString = (workspace, value) =>
+const stringToBlock = (workspace, value) =>
   newBlockWithFields(workspace, "text", { "TEXT": value })
 
-const newList = (workspace, elementBlocks) => {
+const listToBlock = (workspace, elementBlocks) => {
   const list = workspace.newBlock('list')
   elementBlocks.forEach((e, i) => {
     appendNewInputList(list)
@@ -77,9 +96,6 @@ const newList = (workspace, elementBlocks) => {
   })
   return list
 }
-
-// INTERPRETER
-const getBooleanValue = block => resultFieldValue(block, "BOOL") == "TRUE"
 
 // LIST
 const isOrganizedList = block =>

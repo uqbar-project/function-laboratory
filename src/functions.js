@@ -48,47 +48,85 @@ function buildFuctionBlockWith(name, functionType, cb) {
       setFunctionType(this, ...functionType)
       this.setHelpUrl("")
     },
-    getReduction(...args) {
-      const paramCount = this.inputList.filter(isBlockInput).length
-      const stackArgs = args.reverse()
-      const allArgs = Array(paramCount).fill()
-        .map((_, i) => argBlock(this, i) || stackArgs.pop())
-      return this.getResultBlock(...allArgs)
-    },
     reduce() {
-      const result = this.getReduction()
-      if (result.error) {
-        errorReporter.report(result.error)
-      } else {
-        reduceBlock(this)(result.block)
+      try {
+        if(blockType(this).isFunctionType()) {
+          throw new Error("Falta aplicar parametros para reducir esta expresion")
+        }
+        const newBlock = this.createReducedBlock()
+        replace(this)(newBlock)
+      } catch (error) {
+        if(error instanceof Error) {
+          errorReporter.report(error.message)
+        } else {
+          throw error;
+        }
       }
+    },
+    createReducedBlock() {
+      const reducedBlock = valueToBlock(this.workspace, this.getValue())
+      
+      configureAsNonEditable(reducedBlock)
+      configureToExpandTo(reducedBlock)(this)
+      
+      return reducedBlock      
+    },
+    getValue() {
+      const paramCount = this.inputList.filter(isBlockInput).length
+      const args = Array(paramCount).fill()
+        .map((_, i) => argBlock(this, i))
+        .map(x => x === null ? ___ : x.getValue())
+        .filter(argBlock => argBlock !== undefined)
+
+      const result = partialApply(...args)(this.compile)
+      return result;
     },
     generateContextMenu: function () {
       return [{
         text: "Reducir",
         callback: this.reduce.bind(this),
-        enabled: !blockType(this).isFunctionType() && this.getResultBlock,
+        enabled: !blockType(this).isFunctionType() && this.compile,
       }, ...this.__proto__.generateContextMenu.bind(this)()]
     }
   }
 }
 
-const getResultBlockDefault = function () { return { block: this } }
+const configureAsNonEditable = block => {
+  block.setEditable(false)
+  block.getChildren().forEach(child => child.setEditable(false))
+}
 
-const buildFuctionBlock = ({ name, type, fields = [], getResultBlock = getResultBlockDefault }) =>
+const configureToExpandTo = reducedBlock => expandedBlock => {
+  const expandedBlockAsXml = Blockly.Xml.blockToDom(expandedBlock)
+
+  reducedBlock.expand = function () {
+    const restoredOldBlock = Blockly.Xml.domToBlock(expandedBlockAsXml, reducedBlock.workspace)
+    replace(reducedBlock)(restoredOldBlock)
+  }
+
+  reducedBlock.generateContextMenu = function () {
+    return [{
+      text: "Expandir",
+      callback: reducedBlock.expand,
+      enabled: true
+    }, ...reducedBlock.__proto__.generateContextMenu.bind(this)()]
+  }
+}
+
+const buildFuctionBlock = ({ name, type, compile, fields = [] }) =>
   buildFuctionBlockWith(name, type, block => {
+    block.compile = compile
     block.appendValueInput(`ARG0`).appendField(fields[0] === undefined ? name : fields[0])
     for (let index = 1; index < type.length - 1; index++) {
       const inputName = fields[index] || ""
       block.appendValueInput(`ARG${index}`).appendField(inputName)
     }
-    block.getResultBlock = getResultBlock
   })
 
 const buildInfixFuctionBlock = ([name, field], functionType) =>
   buildFuctionBlockWith(name, functionType, block => {
-    block.appendValueInput("LEFT")
-    block.appendValueInput("RIGHT")
+    block.appendValueInput("ARG0")
+    block.appendValueInput("ARG1")
       .appendField(field)
   })
 
@@ -99,26 +137,6 @@ function decorateInit(block, initExtension) {
     initExtension.bind(this)();
   }
   block.init = newInit
-}
-
-const reduceBlock = expandedBlock => reducedBlock => {
-  // Result blocks are not editable
-  reducedBlock.setEditable(false)
-  reducedBlock.getChildren().forEach(child => child.setEditable(false))
-
-  expandedBlockAsXml = Blockly.Xml.blockToDom(expandedBlock)
-  reducedBlock.generateContextMenu = function () {
-    return [{
-      text: "Expandir",
-      callback: function () {
-        const restoredOldBlock = Blockly.Xml.domToBlock(expandedBlockAsXml, reducedBlock.workspace)
-        replace(reducedBlock)(restoredOldBlock)
-      },
-      enabled: true
-    }, ...reducedBlock.__proto__.generateContextMenu.bind(this)()]
-  }
-
-  replace(expandedBlock)(reducedBlock)
 }
 
 const replace = oldBlock => newBlock => {
@@ -142,72 +160,49 @@ const argBlock = (block, arg = 0) => {
 const allArgBlocks = block =>
   Array(block.inputList.length).fill().map((_, i) => argBlock(block, i))
 
-const resultFieldValue = (block, field) => {
-  const reduction = block.getReduction().block
-  const value = reduction.getFieldValue(field)
-  if (reduction != block) { reduction.dispose() } // Dispose intermediate result blocks
-  return value
-}
-
-
 buildFuctionBlock({
   name: "even",
   type: ["Number", "Boolean"],
-  getResultBlock: function (arg) {
-    const result = resultFieldValue(arg, "NUM") % 2 == 0
-    return { block: newBoolean(this.workspace, result) }
-  }
+  compile: (n) => n % 2 == 0
 })
 buildFuctionBlock({
   name: "not",
   type: ["Boolean", "Boolean"],
-  getResultBlock: function (arg) {
-    const result = !getBooleanValue(arg)
-    return { block: newBoolean(this.workspace, result) }
-  }
+  compile: (bool) => !bool
 })
 buildFuctionBlock({
   name: "length",
   type: ["String", "Number"],
-  getResultBlock: function (arg) {
-    const result = resultFieldValue(arg, "TEXT").length
-    return { block: newNumber(this.workspace, result) }
-  }
+  compile: (string) => string.length
 })//TODO: List(Char)
 buildFuctionBlock({
   name: "charAt",
   type: ["Number", "String", "String"],
-  getResultBlock: function (arg0, arg1) {
-    const position = resultFieldValue(arg0, "NUM")
-    const string = resultFieldValue(arg1, "TEXT")
-    const result = string[position]
-    if (result != null) {
-      return { block: newString(this.workspace, result) }
-    } else {
-      return ({ error: "Posición fuera de límites" })
-    }
+  compile: (position) => (string) => {
+    const char = string[position];
+    if(char == null) { throw new Error("Posición fuera de límites") }
+    return char;
   }
 })
 
 buildInfixFuctionBlock(["compare", ">"], ["a", "a", "Boolean"])//TODO: Selector
 buildInfixFuctionBlock(["apply", "$"], [["a", "b"], "a", "b"])
 
+decorateInit(Blockly.Blocks["apply"], function () {
+  this.compile = (f) => (x) => f(x)
+})
+
 buildFuctionBlock({
   name: "id",
   type: ["a", "a"],
-  getResultBlock: function (arg) {
-    return { block: copyBlock(this.workspace, arg) }
-  }
+  compile: (x) => x,
 })
 buildFuctionBlock({
   name: "composition",
   type: [["b", "c"], ["a", "b"], "a", "c"],
   fields: ["", ".", "$"],
-  getResultBlock: function (f2, f1, value) {
-    const innerResult = f1.getReduction(value).block
-    const result = f2.getReduction(innerResult)
-    innerResult.dispose() // Dispose intermediate result blocks
-    return result
+  compile: (f2) => (f1) => (value) => {
+    return f2(f1(value))
   }
 })
 
@@ -215,15 +210,7 @@ buildInfixFuctionBlock(["at", "!!"], [newListType("a"), "Number", "a"])
 buildFuctionBlock({
   name: "any",
   type: [["a", "Boolean"], newListType("a"), "Boolean"],
-  getResultBlock: function (condition, list) {
-    const result = allListElements(list).some(e => {
-      const booleanBlock = condition.getReduction(e).block
-      const bul = getBooleanValue(booleanBlock)
-      booleanBlock.dispose() // Dispose intermediate result blocks
-      return bul
-    })
-    return { block: newBoolean(this.workspace, result) }
-  }
+  compile: (condition) => (list) => list.some(condition)
 })
 buildFuctionBlock({
   name: "all",
@@ -238,10 +225,7 @@ buildFuctionBlock({
 buildFuctionBlock({
   name: "map",
   type: [["a", "b"], newListType("a"), newListType("b")],
-  getResultBlock: function (transform, list) {
-    const result = allListElements(list).map(e => transform.getReduction(e).block)
-    return { block: newList(this.workspace, result) }
-  }
+  compile: (f) => (list) => list.map(f)
 })
 buildFuctionBlock({
   name: "maximum",
@@ -253,7 +237,8 @@ buildFuctionBlock({
 })
 buildFuctionBlock({
   name: "fold",
-  type: [["a", "b", "a"], "a", newListType("b"), "a"]
+  type: [["a", "b", "a"], "a", newListType("b"), "a"],
+  compile: (f) => (seed) => (list) => list.reduce((x, y) => f(x)(y), seed)
 })
 
 Blockly.Blocks['list'] = {
@@ -269,6 +254,7 @@ Blockly.Blocks['list'] = {
     this.setOnChange(function (event) { onChangeList.bind(this)(event) })
     this.outputType = new ListType(createType("a"))
     this.inputIndex = 1
+    this.getValue = () => this.getChildren().map(element => element.getValue())
   },
 
   /**
@@ -305,20 +291,41 @@ Blockly.Blocks['list'] = {
 
 
 Blockly.Blocks["math_arithmetic"].onchange = function (event) {
-  setFunctionType(this, "Number", "Number", "Number")
   onChangeFunction.bind(this)(event)
 }
 
-function decorateValueBlock(name, type) {
+decorateInit(Blockly.Blocks["math_arithmetic"], function () {
+  setFunctionType(this, "Number", "Number", "Number")
+  this.getValue = () => {
+    const op = ({
+      "ADD": x => y => x + y,
+      "MINUS": x => y => x - y,
+      "MULTIPLY": x => y => x * y,
+      "DIVIDE": x => y => x / y,
+      "POWER": x => y => Math.pow(x, y),
+    })[this.getField("OP").getValue()]
+    var a = this.getInput("A").connection.targetBlock() && this.getInput("A").connection.targetBlock().getValue()
+    var b = this.getInput("B").connection.targetBlock() && this.getInput("B").connection.targetBlock().getValue()
+    if (a == null) { a = ___ }
+    if (b == null) { b = ___ }
+    return partialApply(a, b)(op)
+  }
+})
+
+function decorateValueBlock(name, type, getValue) {
   Blockly.Blocks[name].onchange = function (event) { onChangeValue.bind(this)(event) }
   Blockly.Blocks[name].outputType = createType(type)
   decorateInit(Blockly.Blocks[name], function () {
-    this.getResultBlock = getResultBlockDefault
-    this.getReduction = getResultBlockDefault
+    this.getValue = getValue(this)
   })
 }
 
-decorateValueBlock("math_number", "Number")
-decorateValueBlock("text", "String")
-decorateValueBlock("logic_boolean", "Boolean")
+decorateValueBlock("math_number", "Number", (block) => () => block.getFieldValue("NUM"))
+decorateValueBlock("text", "String", (block) => () => block.getFieldValue("TEXT"))
+decorateValueBlock("logic_boolean", "Boolean", (block) => () => {
+  const valueName = block.getFieldValue("BOOL");
+  if(valueName == "TRUE") { return true };
+  if(valueName == "FALSE") { return false };
+  throw new Error("Booleano inicializado con un valor invalido");
+})
 
