@@ -6,7 +6,7 @@ describe('Reducing expressions', () => {
 
     even.reduce()
 
-    assertErrorReported('Falta aplicar parametros para reducir esta expresion') 
+    assertErrorReported('Falta aplicar parametros para reducir esta expresion')
     assertAnyBlockInWorkspaceSatisfies(workspace, ({ type }) => type == 'even')
   })
 
@@ -159,6 +159,29 @@ describe('Reducing expressions', () => {
           newFunction(workspace, 'even'), listToBlock(workspace, numbers)
         )
         assertThatBlockReducesAndThenExpandsBackCorrectly(anyEven13, booleanToBlock(workspace, false))
+      })
+    })
+
+    describe('all', () => {
+
+      onWorkspace('on empty list', workspace => {
+        const even = newFunction(workspace, 'even')
+        const block = newFunction(workspace, 'all', even, listToBlock(workspace, []))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, booleanToBlock(workspace, true))
+      })
+
+      onWorkspace('when all elements apply', workspace => {
+        const even = newFunction(workspace, 'even')
+        const numbers = [2, 4].map(n => numberToBlock(workspace, n))
+        const block = newFunction(workspace, 'all', even, listToBlock(workspace, numbers))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, booleanToBlock(workspace, true))
+      })
+
+      onWorkspace('When some elements apply', workspace => {
+        const even = newFunction(workspace, 'even')
+        const numbers = [2, 3].map(n => numberToBlock(workspace, n))
+        const block = newFunction(workspace, 'all', even, listToBlock(workspace, numbers))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, booleanToBlock(workspace, false))
       })
     })
 

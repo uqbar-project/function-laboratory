@@ -214,7 +214,8 @@ buildFuctionBlock({
 })
 buildFuctionBlock({
   name: "all",
-  type: [["a", "Boolean"], newListType("a"), "Boolean"]
+  type: [["a", "Boolean"], newListType("a"), "Boolean"],
+  compile: (condition) => (list) => list.every(condition)
 })
 buildFuctionBlock({
   name: "filter",
