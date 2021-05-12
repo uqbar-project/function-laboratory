@@ -185,6 +185,17 @@ describe('Reducing expressions', () => {
       })
     })
 
+    describe('filter', () => {
+      onWorkspace('reduction works', workspace => {
+        const even = newFunction(workspace, 'even')
+        const numbers = [1, 2, 3].map(n => numberToBlock(workspace, n))
+        const mapLengthWords = newFunction(workspace, 'filter', even, listToBlock(workspace, numbers))
+
+        const expectedNumbers = [2].map(n => numberToBlock(workspace, n))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(mapLengthWords, listToBlock(workspace, expectedNumbers))
+      })
+    })
+
     describe('map', () => {
       onWorkspace('reduction works', workspace => {
         const numbers = [1, 3].map(n => numberToBlock(workspace, n))

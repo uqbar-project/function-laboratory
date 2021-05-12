@@ -221,7 +221,8 @@ buildFuctionBlock({
   name: "filter",
   type: [["a", "Boolean"],
   newListType("a"),
-  newListType("a")]
+  newListType("a")],
+  compile: (condition) => (list) => list.filter(condition)
 })
 buildFuctionBlock({
   name: "map",
