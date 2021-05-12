@@ -6,7 +6,7 @@ describe('Reducing expressions', () => {
 
     even.reduce()
 
-    assertErrorReported('Falta aplicar parametros para reducir esta expresion') 
+    assertErrorReported('Falta aplicar parametros para reducir esta expresion')
     assertAnyBlockInWorkspaceSatisfies(workspace, ({ type }) => type == 'even')
   })
 
@@ -115,6 +115,7 @@ describe('Reducing expressions', () => {
 
         charAt0Hello.reduce()
 
+        assertErrorReported('Posición fuera de límites') 
         assert.exists(workspace.getBlockById(charAt0Hello.id))
         assert.exists(workspace.getBlockById(hello.id))
         assert.exists(workspace.getBlockById(six.id))
@@ -162,16 +163,88 @@ describe('Reducing expressions', () => {
       })
     })
 
+    describe('all', () => {
+
+      onWorkspace('on empty list', workspace => {
+        const even = newFunction(workspace, 'even')
+        const block = newFunction(workspace, 'all', even, listToBlock(workspace, []))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, booleanToBlock(workspace, true))
+      })
+
+      onWorkspace('when all elements apply', workspace => {
+        const even = newFunction(workspace, 'even')
+        const numbers = [2, 4].map(n => numberToBlock(workspace, n))
+        const block = newFunction(workspace, 'all', even, listToBlock(workspace, numbers))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, booleanToBlock(workspace, true))
+      })
+
+      onWorkspace('When some elements apply', workspace => {
+        const even = newFunction(workspace, 'even')
+        const numbers = [2, 3].map(n => numberToBlock(workspace, n))
+        const block = newFunction(workspace, 'all', even, listToBlock(workspace, numbers))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, booleanToBlock(workspace, false))
+      })
+    })
+
+    describe('filter', () => {
+      onWorkspace('reduction works', workspace => {
+        const even = newFunction(workspace, 'even')
+        const numbers = [1, 2, 3].map(n => numberToBlock(workspace, n))
+        const block = newFunction(workspace, 'filter', even, listToBlock(workspace, numbers))
+
+        const expectedNumbers = [2].map(n => numberToBlock(workspace, n))
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, listToBlock(workspace, expectedNumbers))
+      })
+    })
+
     describe('map', () => {
       onWorkspace('reduction works', workspace => {
         const numbers = [1, 3].map(n => numberToBlock(workspace, n))
         const words = ["a", "asd"].map(s => stringToBlock(workspace, s))
-        const mapLengthWords = newFunction(workspace, 'map',
+        const block = newFunction(workspace, 'map',
           newFunction(workspace, 'length'), listToBlock(workspace, words)
         )
         const expectedList = listToBlock(workspace, numbers)
 
-        assertThatBlockReducesAndThenExpandsBackCorrectly(mapLengthWords, expectedList)
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, expectedList)
+      })
+    })
+
+    describe('maximum', () => {
+      onWorkspace('reduction works', workspace => {
+        const numbers = [1, 3].map(n => numberToBlock(workspace, n))
+        const block = newFunction(workspace, 'maximum', listToBlock(workspace, numbers))
+
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, numberToBlock(workspace, 3))
+      })
+
+      onWorkspace("on empty list should fail", workspace => {
+        const emptyList = listToBlock(workspace, [])
+        const block = newFunction(workspace, 'maximum', emptyList)
+        block.reduce()
+        
+        assertErrorReported('La lista está vacía') 
+        assert.exists(workspace.getBlockById(block.id))
+        assert.exists(workspace.getBlockById(emptyList.id))
+      })
+    })
+
+    describe('minimum', () => {
+      onWorkspace('reduction works', workspace => {
+        const numbers = [1, 3].map(n => numberToBlock(workspace, n))
+        const block = newFunction(workspace, 'minimum', listToBlock(workspace, numbers))
+
+        assertThatBlockReducesAndThenExpandsBackCorrectly(block, numberToBlock(workspace, 1))
+      })
+
+      onWorkspace("on empty list should fail", workspace => {
+        const emptyList = listToBlock(workspace, [])
+        const block = newFunction(workspace, 'minimum', emptyList)
+        block.reduce()
+        
+        assertErrorReported('La lista está vacía') 
+        assert.exists(workspace.getBlockById(block.id))
+        assert.exists(workspace.getBlockById(emptyList.id))
       })
     })
 
