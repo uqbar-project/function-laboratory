@@ -50,13 +50,13 @@ function buildFuctionBlockWith(name, functionType, cb) {
     },
     reduce() {
       try {
-        if(blockType(this).isFunctionType()) {
+        if (blockType(this).isFunctionType()) {
           throw new Error("Falta aplicar parametros para reducir esta expresion")
         }
         const newBlock = this.createReducedBlock()
         replace(this)(newBlock)
       } catch (error) {
-        if(error instanceof Error) {
+        if (error instanceof Error) {
           errorReporter.report(error.message)
         } else {
           throw error;
@@ -65,11 +65,11 @@ function buildFuctionBlockWith(name, functionType, cb) {
     },
     createReducedBlock() {
       const reducedBlock = valueToBlock(this.workspace, this.getValue())
-      
+
       configureAsNonEditable(reducedBlock)
       configureToExpandTo(reducedBlock)(this)
-      
-      return reducedBlock      
+
+      return reducedBlock
     },
     getValue() {
       const paramCount = this.inputList.filter(isBlockInput).length
@@ -180,7 +180,7 @@ buildFuctionBlock({
   type: ["Number", "String", "String"],
   compile: (position) => (string) => {
     const char = string[position];
-    if(char == null) { throw new Error("Posición fuera de límites") }
+    if (char == null) { throw new Error("Posición fuera de límites") }
     return char;
   }
 })
@@ -231,11 +231,19 @@ buildFuctionBlock({
 })
 buildFuctionBlock({
   name: "maximum",
-  type: [newListType("a"), "a"]
+  type: [newListType("a"), "a"],
+  compile: (list) => {
+    if (!list.length) { throw new Error("La lista está vacía") }
+    return list.reduce((a, b) => a > b ? a : b)
+  }
 })
 buildFuctionBlock({
   name: "minimum",
-  type: [newListType("a"), "a"]
+  type: [newListType("a"), "a"],
+  compile: (list) => {
+    if (!list.length) { throw new Error("La lista está vacía") }
+    return list.reduce((a, b) => a < b ? a : b)
+  }
 })
 buildFuctionBlock({
   name: "fold",
@@ -326,8 +334,8 @@ decorateValueBlock("math_number", "Number", (block) => () => block.getFieldValue
 decorateValueBlock("text", "String", (block) => () => block.getFieldValue("TEXT"))
 decorateValueBlock("logic_boolean", "Boolean", (block) => () => {
   const valueName = block.getFieldValue("BOOL");
-  if(valueName == "TRUE") { return true };
-  if(valueName == "FALSE") { return false };
+  if (valueName == "TRUE") { return true };
+  if (valueName == "FALSE") { return false };
   throw new Error("Booleano inicializado con un valor invalido");
 })
 
